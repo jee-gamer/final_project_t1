@@ -28,6 +28,7 @@ for person in persons_table.table:
 Database1.insert(login_table)
 print(login_table)
 
+
 def login():
     username = input('Username: ')
     password = input('Password: ')
@@ -51,6 +52,7 @@ def login():
             else:
                 print("Wrong password!")
                 return None
+
 
 login()
 
