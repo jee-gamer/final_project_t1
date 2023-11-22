@@ -1,22 +1,5 @@
-# try wrapping the code below that reads a persons.csv file in a class and make it more general such that it can read in any csv file
 
 import csv, os, copy
-
-__location__ = os.path.realpath(
-    os.path.join(os.getcwd(), os.path.dirname(__file__)))
-
-
-def read_csv(file_name):
-    read_list = []
-    with open(os.path.join(__location__, file_name)) as f:
-        rows = csv.DictReader(f)
-        for r in rows:
-            read_list.append(dict(r))
-    print(read_list)
-    return read_list
-
-# add in code for a Database class
-
 
 class Database:
     """
@@ -34,13 +17,16 @@ class Database:
                 return table
         return None
 
-# add in code for a Table class
-
-
 class Table:
     def __init__(self, table_name, table):
         self.table = table
         self.table_name = table_name
+
+    def update(self, ID, key, value):
+        for row in self.table:
+            if row[row.keys()[0]] == ID:  # row.keys()[0] get first key of dict, assuming ID
+                row[key] = value
+                return
 
     def join(self, other_table, common_key):
         joined_table = Table(
@@ -82,6 +68,3 @@ class Table:
 
     def __str__(self):
         return self.table_name + ':' + str(self.table)
-
-
-# modify the code in the Table class so that it supports the insert operation where an entry can be added to a list of dictionary
