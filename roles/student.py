@@ -1,7 +1,7 @@
 
 class Student:
     def __init__(self, ID, request_table, info):
-        print(info)
+        # print(info)
         self.ID = ID
         request = []
         for r in request_table:
@@ -15,7 +15,6 @@ class Student:
         for ID, name in self.requests:
             print()
             print(f"You were invited to project '{name}', id: {ID}.")
-            print(f"This is the list btw {self.requests}")
         if not self.requests:
             print("There are no requests.\n")
             return 0, 0
@@ -31,7 +30,7 @@ class Student:
     def answer_request(self):
         copy_request = self.requests.copy()
         for ID, name in copy_request:
-            print(f"You invited to project '{name}', id: {ID}.")
+            print(f"You were invited to project '{name}', id: {ID}.")
             accept = input("Your answer (y/n/i): ")
             if accept == "i":
                 continue
@@ -52,7 +51,7 @@ class Student:
             print("You are not a student.\n")
             return None
         project_name = input("Enter your project title: ")
-        project_dictionary = {"projectID": 5445,  # need to random this
+        project_dictionary = {"projectID": "2",  # need to random this
                               "title": project_name,
                               "lead": None,
                               "member1": None,

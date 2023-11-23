@@ -42,6 +42,8 @@ def write_csv(name, list_dict):  # working
 
 DB = Database()
 
+def official_exit():
+    pass
 
 def initializing():
     # create a 'persons' table
@@ -83,7 +85,7 @@ def initializing():
     """
     request_dict = {'projectID': "1",
                     'project_name': 'Test',
-                    'to_be_member': "1",  # The Goat
+                    'to_be_member': None,  # no one
                     'response': None,  # 1 is accepted 0 is denied
                     'response_date': None}
     project_table.filter(lambda x: x["projectID"] == "1")
@@ -161,7 +163,7 @@ def check_choice(choice_number):
             choice = int(choice)
         except ValueError as e:
             print(e, "// Choice must be integers!")
-        if choice > choice_number:
+        if choice > choice_number or choice < 1:
             print("That choice doesn't exist.")
             continue
         return choice
@@ -197,7 +199,6 @@ def login_check(person_ID, role):
                 if accept == 1:
                     for project in project_table.table:
                         if project["projectID"] == ID:
-                            print("GOT THE PROJECT")
                             name = project_table.find(ID, "title")
                             """
                             start adding student the be a member
@@ -272,21 +273,65 @@ def login_check(person_ID, role):
             this_lead = lead.Lead(val[0],
                                   request_table.table,
                                   this_student_info.table,
-                                  this_project
+                                  this_project.table,
+                                  ad_request_table.table
                                   )
-
-            choice = check_choice(5)
+            projectID = this_project.table[0]["projectID"]
+            project_name = this_project.table[0]["title"]
+            choice = check_choice(6)
 
             if choice == 1:
                 this_lead.check_project_status()
+
             elif choice == 2:
-                pass
+                this_lead.modify_project()
+
             elif choice == 3:
                 this_lead.check_responses()
+
             elif choice == 4:
-                this_lead.send_request()
+                student_ID = this_lead.send_request()
+                if student_ID:
+                    person_list = [x['ID'] for x in login_table.select("ID")]
+                    if student_ID not in person_list:
+                        print(f"The person with ID: {student_ID} doesn't"
+                              f" exist.\n")
+                        continue
+                    elif login_table.find(student_ID, "role") != "student":
+                        print("You can only invite students.\n")
+                        continue
+                    request_dict = {'projectID': projectID,
+                                    'project_name': project_name,
+                                    'to_be_member': student_ID,
+                                    'response': None,
+                                    'response_date': None}
+                    request_table.insert(request_dict)
+                    print(f"Successfully invited person with ID: {student_ID}"
+                          f"\n")
+                    project_table.update(projectID, "status", "pending member")
+
             elif choice == 5:
-                this_lead.send_request_advisor()
+                advisor_ID = this_lead.send_request_advisor()
+                if advisor_ID:
+                    person_list = [x['ID'] for x in login_table.select("ID")]
+                    if advisor_ID not in person_list:
+                        print(f"The person with ID: {advisor_ID}"
+                              f" doesn't exist.\n")
+                        continue
+                    elif login_table.find(advisor_ID, "role") != "advisor":
+                        print("The person you are requesting is not"
+                              " an advisor.\n")
+                        continue
+                    request_dict = {'projectID': projectID,
+                                    'project_name': project_name,
+                                    'to_be_advisor': advisor_ID,
+                                    'response': None,
+                                    'response_date': None}
+                    ad_request_table.insert(request_dict)
+                    print(f"Successfully invited an advisor with ID:"
+                          f" {advisor_ID}\n")
+                    project_table.update(projectID, "status", "pending advisor"
+                                         )
             elif choice == 6:
                 exit()
 
@@ -297,6 +342,5 @@ def login_check(person_ID, role):
 
 
 while True:
-    login_check(val[0], val[1])
-
+    login_check(val[0], val[1])  # purpose is for sudden change in role only
 
