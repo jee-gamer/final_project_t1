@@ -17,6 +17,7 @@ class Database:
                 return table
         return None
 
+
 class Table:
     def __init__(self, table_name, table):
         self.table = table
@@ -24,9 +25,16 @@ class Table:
 
     def update(self, ID, key, value):
         for row in self.table:
-            if row[row.keys()[0]] == ID:  # row.keys()[0] get first key of dict, assuming ID
+            row_list = [x for x in row.keys()]
+            if row[row_list[0]] == ID:  # row.keys()[0] get first key of dict, assuming ID
                 row[key] = value
                 return
+
+    def find(self, ID, key):
+        for row in self.table:
+            row_list = [x for x in row.keys()]
+            if row[row_list[0]] == ID:  # row.keys()[0] get first key of dict, assuming ID
+                return row[key]
 
     def join(self, other_table, common_key):
         joined_table = Table(
@@ -65,6 +73,16 @@ class Table:
 
     def insert(self, dictionary):
         self.table.append(dictionary)
+
+    def clear(self):  # use with caution
+        self.table = []
+
+    def remove_dict(self, dictionary):  # did not test yet
+        for row in self.table:
+            if row == dictionary:
+                self.table.remove(row)
+
+
 
     def __str__(self):
         return self.table_name + ':' + str(self.table)

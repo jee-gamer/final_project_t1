@@ -1,0 +1,23 @@
+Project
+project_dictionary = {"projectID": 1,  # THE ID IS VERY TEMPORARY
+                      "title": f'Test',
+                      "lead": "233222",
+                      "member1": None,
+                      "member2": None,
+                      "advisor": None,
+                      "status": None (pending member, pending advisor, or ready to solicit an advisor)
+                      }
+
+member_pending_request_table
+request_dict = {'projectID': 1,
+                'project_name': 'Test',
+                'to_be_member': "5662557",  # Manuel.N
+                'response': None,  # 1 is accept 0 is denied
+                'response_date': None}
+
+Advisor_pending_request table
+request_dict = {'projectID': 1,
+                'project_name': 'Test',
+                'to_be_advisor': "5662557",  # Manuel.N
+                'response': None,  # 1 is accept 0 is denied
+                'response_date': None}
