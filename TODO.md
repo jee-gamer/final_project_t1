@@ -1,28 +1,48 @@
 * An admin
-  - can added table to database
-  - can create table
-  - can manage database
-  - bro can do everything at this point
+  - function
+  - add_table(name)
+  - create_table(name)
+  - manage_database()
+
+* A student
+  - function
+  - read_request() and answer_request()
+  - create_project(name)
+    - update role to lead
+    - instant re-log in or instant action
+  
 * A lead Student
-  - create a project.. I suppose it is a project like this
-  - make function that send invite messages to potential members
-  - add member to person table
-  - 
-  - modify his project?? how
-  - Send request messages to potential advisors
-  - Submit the final project report
-* A member student
-  - make function that accept of deny invitation
-  - 
-  - modify project how??
-* A normal faculty who is not an advisor
-  - receive request to be advisor from a lead student
-  - deny
-  - receive details of project
-* A advising faculty
-  - receive request to be advisor from a lead student
-  - accept
-  - deny others
-  - receive details of project
-  - 
-  - approve project how?
+  - function
+  - create_project(name)
+  - send_invite(person) and send_invite(advisor)
+    - update the project and request table
+  - modify_project()
+    - change name
+    - kick members
+    - else
+    - update relating table
+  - submit_final_report()
+
+* A member
+  - function
+  - check_project_status()
+  - modify_project()
+    - anything a member should be able to do
+    - update the project table
+  - check_responses()
+    - like lead student
+
+* A faculty
+  - function
+  - read_request() and answer_request()
+    - function the same as student
+    - also receive detail of project
+    - update project table and request table
+    - if accept one then update (deny) other request in table
+    - update role to advisor
+    
+* A project advisor
+  - function
+  - approve_project()
+  - no idea about anything else
+
