@@ -3,7 +3,7 @@ import random
 
 from database import Table, Database
 import csv, os, copy
-from roles import student, member, lead, faculty
+from roles import student, member, lead, faculty, advisor
 from datetime import date
 
 __location__ = os.path.realpath(
@@ -72,7 +72,8 @@ def initializing():
                           "member1": None,
                           "member2": None,
                           "advisor": None,
-                          "status": None
+                          "status": None,
+                          "evaluator": None
                           }
     project_table.insert(project_dictionary)
     DB.insert(project_table)
@@ -406,15 +407,20 @@ def login_check(person_ID, role):
     elif role == 'advisor':
         while True:
             print("You can choose the following:\n"
-                  "1.bro is now an advisor congrat\n"
+                  "1.request project evaluation\n"
                   "2.exit\n"
                   )
 
             choice = check_choice(2)
             this_advisor_info = login_table.filter(lambda x: x["ID"] == val[0])
-            this_advisor = faculty.Faculty(person_ID, ad_request_table.table,
+            this_advisor = advisor.Advisor(person_ID,
                                            this_advisor_info.table)
-        pass
+
+            if choice == 1:
+                evaluator_ID = this_advisor.request_project_evaluation()
+                if not evaluator_ID:  # If enter nothing then choice again
+                    continue
+
 
 
 login_check(val[0], val[1])

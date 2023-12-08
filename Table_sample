@@ -6,6 +6,7 @@ project_dictionary = {"projectID": 1,  # THE ID IS VERY TEMPORARY
                       "member2": None,
                       "advisor": None,
                       "status": None (pending member, pending advisor, or ready to solicit an advisor)
+                      "evaluator": None
                       }
 
 member_pending_request_table
@@ -21,3 +22,10 @@ request_dict = {'projectID': 1,
                 'to_be_advisor': "5662557",  # Manuel.N
                 'response': None,  # 1 is accept 0 is denied
                 'response_date': None}
+
+pending_project table
+request_dict = {'projectID': 1,
+                'project_name': 'Test',
+                'advisor': "5662557",  # Manuel.N
+                'feedback': "something",
+                'status': None} (or 1, -1)

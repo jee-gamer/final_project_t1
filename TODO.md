@@ -39,8 +39,9 @@
     - also receive detail of project
     - update project table and request table
     - if accept one then update (deny) other request in table
-    - update role to advisor
-    
+    - update role to advisor 
+      - *** ADVISOR SHOULD BE ABLE TO ADVISE MULTIPLE GROUP OR NOT?
+        - This will be very troublesome
 * A project advisor
   - function
   - approve_project()
