@@ -46,3 +46,5 @@
   - approve_project()
   - no idea about anything else
 
+YOU DO ALL THIS IN ONE SESSION
+NO REAL UPDATE ON TABLE YET

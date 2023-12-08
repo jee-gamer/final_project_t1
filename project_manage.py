@@ -3,7 +3,7 @@ import random
 
 from database import Table, Database
 import csv, os, copy
-from roles import student, member, lead
+from roles import student, member, lead, faculty
 from datetime import date
 
 __location__ = os.path.realpath(
@@ -42,8 +42,10 @@ def write_csv(name, list_dict):  # working
 
 DB = Database()
 
+
 def official_exit():
     pass
+
 
 def initializing():
     # create a 'persons' table
@@ -88,6 +90,12 @@ def initializing():
                     'to_be_member': None,  # no one
                     'response': None,  # 1 is accepted 0 is denied
                     'response_date': None}
+    ad_request_dict = {'projectID': "1",
+                       'project_name': 'Test',
+                       'to_be_advisor': "1",  # Invite theGoat NOW!
+                       'response': None,  # 1 is accepted 0 is denied
+                       'response_date': None}
+    advisor_pending_request_table.insert(ad_request_dict)
     project_table.filter(lambda x: x["projectID"] == "1")
     project_table.update(1, "status", "pending member")
     """
@@ -161,7 +169,7 @@ def check_choice(choice_number):
         choice = input("Enter your choice: ")
         try:
             choice = int(choice)
-        except ValueError as e:
+        except TypeError as e:
             print(e, "// Choice must be integers!")
         if choice > choice_number or choice < 1:
             print("That choice doesn't exist.")
@@ -173,6 +181,7 @@ val = login()
 
 
 def login_check(person_ID, role):
+    today = date.today()
     if role == 'admin':
         pass
 
@@ -186,11 +195,10 @@ def login_check(person_ID, role):
 
             choice = check_choice(3)
 
-            this_student_info = login_table\
+            this_student_info = login_table \
                 .filter(lambda x: x["ID"] == person_ID)
             this_student = student.Student(person_ID, request_table.table,
                                            this_student_info.table)
-            today = date.today()
 
             if choice == 1:
                 accept, ID = this_student.read_request()
@@ -222,7 +230,7 @@ def login_check(person_ID, role):
                                 project["member2"] = person_ID
                                 login_table.update(person_ID, "role", "member")
                                 if not check_pending(ID):
-                                    project_table.update("1", "status",
+                                    project_table.update(ID, "status",
                                                          None)
                                 print(
                                     f"You have became a member of {name} "
@@ -318,9 +326,9 @@ def login_check(person_ID, role):
                         print(f"The person with ID: {advisor_ID}"
                               f" doesn't exist.\n")
                         continue
-                    elif login_table.find(advisor_ID, "role") != "advisor":
+                    elif login_table.find(advisor_ID, "role") != "faculty":
                         print("The person you are requesting is not"
-                              " an advisor.\n")
+                              " a faculty.\n")
                         continue
                     request_dict = {'projectID': projectID,
                                     'project_name': project_name,
@@ -328,7 +336,7 @@ def login_check(person_ID, role):
                                     'response': None,
                                     'response_date': None}
                     ad_request_table.insert(request_dict)
-                    print(f"Successfully invited an advisor with ID:"
+                    print(f"Successfully invited a faculty with ID:"
                           f" {advisor_ID}\n")
                     project_table.update(projectID, "status", "pending advisor"
                                          )
@@ -336,11 +344,80 @@ def login_check(person_ID, role):
                 exit()
 
     elif role == 'faculty':
-        pass
+        while True:
+            print("You can choose the following:\n"
+                  "1.Check requests\n"
+                  "2.exit\n"
+                  )
+
+            choice = check_choice(2)
+            this_faculty_info = login_table.filter(lambda x: x["ID"] == val[0])
+            this_faculty = faculty.Faculty(person_ID, ad_request_table.table,
+                                           this_faculty_info.table)
+
+            if choice == 1:
+                accept, ID = this_faculty.read_request()
+                if accept == 0 and ID == 0:
+                    continue
+                if accept == 1:
+                    for project in project_table.table:
+                        if project["projectID"] == ID:
+                            name = project_table.find(ID, "title")
+                            """
+                            start adding faculty the be an advisor
+                            """
+                            ad_request_table.update(project["projectID"],
+                                                    "response",
+                                                    1)
+                            ad_request_table.update(project["projectID"],
+                                                    "response_date",
+                                                    today)
+                            if not project["advisor"]:
+                                project["advisor"] = person_ID
+                                login_table.update(person_ID, "role", "advisor"
+                                                   )
+                                if not check_pending(ID):
+                                    project_table.update(ID, "status",
+                                                         None)
+                                print(
+                                    f"You have became an advisor of {name} "
+                                    f"project.\n")
+                                print()
+                                login_check(person_ID, "advisor")
+                                break
+                            else:
+                                print("The project already had an advisor.")
+                            continue
+                elif accept == -1:  # Denied
+                    for project in project_table.table:
+                        if project["projectID"] == ID:
+                            request_table.update(project["projectID"],
+                                                 "response",
+                                                 -1)
+                            request_table.update(project["projectID"],
+                                                 "response_date",
+                                                 today)
+                            print("Denied the request.\n")
+                            continue
+
+            elif choice == 2:
+                exit()
+
     elif role == 'advisor':
+        while True:
+            print("You can choose the following:\n"
+                  "1.bro is now an advisor congrat\n"
+                  "2.exit\n"
+                  )
+
+            choice = check_choice(2)
+            this_advisor_info = login_table.filter(lambda x: x["ID"] == val[0])
+            this_advisor = faculty.Faculty(person_ID, ad_request_table.table,
+                                           this_advisor_info.table)
         pass
 
 
-while True:
-    login_check(val[0], val[1])  # purpose is for sudden change in role only
+login_check(val[0], val[1])
 
+# while True:
+#     login_check(val[0], val[1])  # purpose is for sudden change in role only

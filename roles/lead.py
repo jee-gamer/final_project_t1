@@ -38,7 +38,8 @@ class Lead:
                     print("The new title is the same as the old title.\n")
                     continue
                 self.project_info['title'] = new_title
-                print("Successfully changed the project title.\n")
+                print(f"Successfully changed the project title to {new_title}."
+                      f"\n")
 
             elif choice == 3:
                 if not self.project_info['member1']:
@@ -118,22 +119,21 @@ class Lead:
                 print("There's still pending member requests.\n")
                 return
 
-        advisor_id = input("Enter the id of the student you want to invite: ")
+        faculty_id = input("Enter the id of the faculty you want to invite: ")
         try:
-            advisor_id = int(advisor_id)
-            advisor_id = str(advisor_id)
+            faculty_id = int(faculty_id)
+            faculty_id = str(faculty_id)
         except ValueError as e:
-            print(e, "// student_id must be integers!\n")
+            print(e, "// faculty_id must be integers!\n")
             return
         for request in self.ad_request_table:  # Check if already requested
             if (
                 request["projectID"] == self.project_info["projectID"] and
-                request["to_be_advisor"] == advisor_id and
                 not request["response"]
             ):
                 print('You have already requested an advisor for this project.'
                       '\n')
                 return
-        return advisor_id
+        return faculty_id
 
 
