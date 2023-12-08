@@ -82,7 +82,5 @@ class Table:
             if row == dictionary:
                 self.table.remove(row)
 
-
-
     def __str__(self):
         return self.table_name + ':' + str(self.table)

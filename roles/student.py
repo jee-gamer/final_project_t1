@@ -1,6 +1,6 @@
 
 class Student:
-    def __init__(self, ID, request_table, info):
+    def __init__(self, ID, info, request_table):
         # print(info)
         self.ID = ID
         request = []

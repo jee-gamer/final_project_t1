@@ -1,6 +1,6 @@
 
 class Member:
-    def __init__(self, ID, request_table, info, project_info):
+    def __init__(self, ID, info, request_table, project_info):
         self.ID = ID
         self.project_info = project_info
         self.request_table = request_table
