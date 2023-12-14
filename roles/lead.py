@@ -1,11 +1,12 @@
 
 class Lead:
     def __init__(self, ID, info, request_table, project_info,
-                 ad_request_table):
+                 ad_request_table, evaluate_table):
         self.ID = ID
         self.request_table = request_table
         self.project_info = project_info[0]
         self.ad_request_table = ad_request_table
+        self.evaluate_table = evaluate_table
 
     def check_project_status(self):
         print(f"The project status is {self.project_info['status']}\n")
@@ -135,5 +136,24 @@ class Lead:
                       '\n')
                 return
         return faculty_id
+
+    def request_project_evaluation(self):
+        if self.project_info['status'] == "passed":
+            print("This project is already passed\n")
+            return None
+        while True:
+            print("You can choose two faculty to evaluate your project")
+            chosen_ev = input("Enter your first project's evaluator ID: ")
+            chosen_ev2 = input("Enter your second project's evaluator ID: ")
+            try:
+                chosen_ev = int(chosen_ev)
+                chosen_ev2 = int(chosen_ev2)
+            except ValueError as e:
+                print(e, "// evaluator_id must be integers!")
+                continue
+            if not chosen_ev or not chosen_ev2:
+                print("You cancelled the request.\n")
+                return None
+            return str(chosen_ev), str(chosen_ev2)
 
 

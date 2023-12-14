@@ -3,7 +3,7 @@ import random
 
 from database import Table, Database
 import csv, os, copy
-from roles import student, member, lead, faculty, advisor
+from roles import student, member, lead, faculty
 from datetime import date
 
 __location__ = os.path.realpath(
@@ -92,10 +92,14 @@ def initializing():
                     'response': None,  # 1 is accepted 0 is denied
                     'response_date': None}
     pending_project_dict = {'projectID': 1,
-                            'project_name': 'Test',
-                            'advisor': "5662557",
+                            'project_name': "yeah",
+                            'advisor': val[0],
                             'evaluator': "1",
+                            'evaluator2': "2",
                             'feedback': None,
+                            'feedback2': None,
+                            'score': None,
+                            'score2': None,
                             'status': None}
     # ad_request_dict = {'projectID': "1",
     #                    'project_name': 'Test',
@@ -114,6 +118,19 @@ def initializing():
     project_evaluation_request_table = Table('pending_project', [])
     DB.insert(project_evaluation_request_table)
     project_evaluation_request_table.insert(pending_project_dict)
+
+    _assigned_project_table = Table('assigned_project', [])
+    # This table use for accepted evaluation only
+    DB.insert(_assigned_project_table)
+
+    _proposal_table = Table('proposal', [])
+    DB.insert(_proposal_table)
+    _report_table = Table('report', [])
+    DB.insert(_report_table)
+
+
+def log_out():
+    pass
 
 
 def login():
@@ -162,6 +179,9 @@ ad_request_table = DB.search('advisor_request')
 login_table = DB.search('login')
 project_table = DB.search('project')
 pending_project_table = DB.search('pending_project')
+assigned_project_table = DB.search('assigned_project')
+proposal_table = DB.search('proposal')
+report_table = DB.search('report')
 
 
 def check_pending(projectID):
@@ -286,7 +306,8 @@ def login_check(person_ID, role):
                   "3.Check request responses\n"
                   "4.Invite potential members\n"
                   "5.Invite potential advisor\n"
-                  "6.exit\n")
+                  "6.request project evaluation\n"
+                  "7.exit\n")
 
             this_student_info = login_table.filter(lambda x: x["ID"] == val[0])
             this_project = project_table.filter(lambda x: x["lead"] == val[0])
@@ -294,11 +315,12 @@ def login_check(person_ID, role):
                                   this_student_info.table,
                                   request_table.table,
                                   this_project.table,
-                                  ad_request_table.table
+                                  ad_request_table.table,
+                                  pending_project_table.table
                                   )
             projectID = this_project.table[0]["projectID"]
             project_name = this_project.table[0]["title"]
-            choice = check_choice(6)
+            choice = check_choice(7)
 
             if choice == 1:
                 this_lead.check_project_status()
@@ -352,7 +374,25 @@ def login_check(person_ID, role):
                           f" {advisor_ID}\n")
                     project_table.update(projectID, "status", "pending advisor"
                                          )
+
             elif choice == 6:
+                evaluator_ID, evaluator_ID2 = \
+                    this_lead.request_project_evaluation()
+                if not evaluator_ID:  # If cancelled
+                    continue
+                request_dict = {'projectID': this_project["projectID"],
+                                'project_name': this_project["title"],
+                                'advisor': val[0],
+                                'evaluator': evaluator_ID,
+                                'evaluator2': evaluator_ID2,
+                                'feedback': None,
+                                'feedback2': None,
+                                'score': None,
+                                'score2': None,
+                                'status': None}
+                pending_project_table.insert(request_dict)
+
+            elif choice == 7:
                 exit()
 
     elif role == 'faculty':
@@ -406,12 +446,12 @@ def login_check(person_ID, role):
                 elif accept == -1:  # Denied
                     for project in project_table.table:
                         if project["projectID"] == ID:
-                            request_table.update(project["projectID"],
-                                                 "response",
-                                                 -1)
-                            request_table.update(project["projectID"],
-                                                 "response_date",
-                                                 today)
+                            ad_request_table.update(project["projectID"],
+                                                    "response",
+                                                    -1)
+                            ad_request_table.update(project["projectID"],
+                                                    "response_date",
+                                                    today)
                             print("Denied the request.\n")
                             continue
 
@@ -429,29 +469,28 @@ def login_check(person_ID, role):
                 elif accept == -1:
                     if not check_pending(ID):
                         project_table.update(ID, "status", None)
+                    pending_project_table.update(ID,
+                                                 "status",
+                                                 "faculty rejected")
                     print("You denied to evaluate this project\n")
                     continue
             elif choice == 3:
                 this_project = pending_project_table \
                     .filter(lambda x: x["evaluator"] == val[0]).table
-                accept = this_faculty.evaluate_project(
-                         this_project["projectID"],
-                         this_project["title"]
-                )
-                if accept == 1:
-                    pending_project_table.update(this_project['projectID'],
-                                                 "status",
-                                                 "passed"
-                                                 )
-                    print("You approved this project!")
-                elif accept == -1:
-                    pending_project_table.update(this_project['projectID'],
-                                                 "status",
-                                                 "denied"
-                                                 )
-                    # IN PROGRESS TO CHANGE TABLE ID TO UNIQUE
-                    # DO NOT CONTINUE UNTIL YOU FIX THE TABLE
-                    pass
+                accept = this_faculty.read_accepted_request()
+
+                # if accept > 0:
+                #     pending_project_table.update(this_project['projectID'],
+                #                                  "score",
+                #                                  accept
+                #                                  )
+                #     print(f"You approved this project with score {accept} !")
+                # elif accept == -1:
+                #     pending_project_table.update(this_project['projectID'],
+                #                                  "score",
+                #                                  "denied"
+                #                                  )
+                #     pass
 
             elif choice == 4:
                 exit()
@@ -463,26 +502,12 @@ def login_check(person_ID, role):
                   "2.exit\n"
                   )
 
-            choice = check_choice(2)
-            this_advisor_info = login_table.filter(lambda x: x["ID"] == val[0])
-            this_advisor = advisor.Advisor(person_ID, this_advisor_info.table,
-                                           pending_project_table)
-            this_project = project_table\
-                .filter(lambda x: x["advisor"] == val[0]).table
-
-            if choice == 1:
-                evaluator_ID = this_advisor.request_project_evaluation()
-                if not evaluator_ID:  # If enter nothing then choice again
-                    continue
-                request_dict = {'projectID': this_project["projectID"],
-                                'project_name': this_project["title"],
-                                'advisor': val[0],
-                                'evaluator': evaluator_ID,
-                                'feedback': None,
-                                'status': None}
-                pending_project_table.insert(request_dict)
-            elif choice == 2:
-                exit()
+            # choice = check_choice(2)
+            # this_advisor_info = login_table.filter(lambda x: x["ID"] == val[0])
+            # this_advisor = advisor.Advisor(person_ID, this_advisor_info.table,
+            #                                pending_project_table)
+            # this_project = project_table\
+            #     .filter(lambda x: x["advisor"] == val[0]).table
 
 
 login_check(val[0], val[1])

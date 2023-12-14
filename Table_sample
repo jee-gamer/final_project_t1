@@ -12,21 +12,48 @@ member_pending_request_table
 request_dict = {'projectID': 1,
                 'project_name': 'Test',
                 'to_be_member': "5662557",  # Manuel.N
-                'response': None,  # 1 is accept 0 is denied
+                'response': None,  # 1 is accept -1 is denied
                 'response_date': None}
 
 Advisor_pending_request table
 request_dict = {'projectID': 1,
                 'project_name': 'Test',
                 'to_be_advisor': "5662557",  # Manuel.N
-                'response': None,  # 1 is accept 0 is denied
+                'response': None,  # 1 is accept -1 is denied
                 'response_date': None}
 
-pending_project table
+proposal table
 request_dict = {'projectID': 1,
                 'project_name': 'Test',
-                'advisor': "5662557",
-                'evaluator': "999"
-                'feedback': "something",
+                'response': None,  # 1 is accept -1 is denied
+                'response_date': None}
+
+report table
+request_dict = {'projectID': 1,
+                'project_name': 'Test',
+                'response': None,  # 1 is accept -1 is denied
+                'response_date': None}
+
+evaluate_assigned table
+request_dict = {'projectID': this_project["projectID"],
+                'project_name': this_project["title"],
+                'advisor': val[0],
+                'evaluator': evaluator_ID,
+                'evaluator2': evaluator_ID2,
+                'feedback': None,
+                'feedback2': None,
+                'score': None,
+                'score2': None,
                 'status': None}
-                (or 1, -1)
+                (1-10, -1 fail)
+
+pending_project table
+request_dict = {'projectID': this_project["projectID"],
+                'project_name': this_project["title"],
+                'advisor': val[0],
+                'evaluator': evaluator_ID,
+                'evaluator2': evaluator_ID2,
+                'status': None}
+                ("evaluator1 accepted", "evaluator2 accepted",
+                "both evaluator accepted)
+
