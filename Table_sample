@@ -5,8 +5,9 @@ project_dictionary = {"projectID": 1,  # THE ID IS VERY TEMPORARY
                       "member1": None,
                       "member2": None,
                       "advisor": None,
-                      "status": None (pending member, pending advisor, or ready to solicit an advisor)
-                      }
+                      "status": None}
+                      (pending member, pending advisor, or ready to solicit an advisor, ready for evaluation, ready for report)
+
 
 member_pending_request_table
 request_dict = {'projectID': 1,

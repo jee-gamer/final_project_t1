@@ -12,7 +12,7 @@ class Lead:
         self.report_table = report_table
 
     def check_project_status(self):
-        print(f"The project status is {self.project_info['status']}\n")
+        print(f"The project status is '{self.project_info['status']}'\n")
 
     def modify_project(self):
         while True:
@@ -153,18 +153,20 @@ class Lead:
         return True
 
     def send_report(self):
+        projectID_list = []
         for request in self.proposal_table:
-            if (
-                request["projectID"] == self.project_info["projectID"] and
-                request["response"] == "1"
-            ):
-                print("The project proposal hasn't been approved yet!")
-                return False
+            projectID_list.append(request["projectID"])
+            if request["projectID"] == self.project_info["projectID"]:
+                if not request["response"] or request["response"] == "-1":
+                    print("The project proposal hasn't been approved yet!\n")
+                    return False
+        if self.project_info["status"] != "ready for report":
+            print("You haven't sent the proposal yet!\n")
 
         for request in self.report_table:
             if (
-                    request["projectID"] == self.project_info["projectID"] and
-                    not request["response"]
+                request["projectID"] == self.project_info["projectID"] and
+                not request["response"]
             ):
                 print("You have already sent a report approval "
                       "request to advisor.\n")
@@ -175,7 +177,10 @@ class Lead:
     def request_project_evaluation(self):
         if self.project_info['status'] == "passed":
             print("This project is already passed\n")
-            return None
+            return 0, 0
+        if self.project_info['status'] != "ready for evaluation":
+            print("This project is not ready for evaluation yet.\n")
+            return 0, 0
         while True:
             print("You can choose two faculty to evaluate your project")
             chosen_ev = input("Enter your first project's evaluator ID: ")

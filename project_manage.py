@@ -58,21 +58,6 @@ def initializing():
     print(login_table)
 
     project_table = Table('project', [])
-    """
-    Max member is 3
-    member1 and member2 can be none
-    """
-    # TEST PROJECT
-    project_dictionary = {"projectID": "1",  # THE ID IS VERY TEMPORARY
-                          "title": f'Test',
-                          "lead": "Lionel Messi",
-                          "member1": None,
-                          "member2": None,
-                          "advisor": None,
-                          "status": None,
-                          "evaluator": None
-                          }
-    project_table.insert(project_dictionary)
     DB.insert(project_table)
 
     advisor_pending_request_table = Table('advisor_request', [])
@@ -80,35 +65,23 @@ def initializing():
     DB.insert(advisor_pending_request_table)
 
     member_pending_request_table = Table('member_request', [])
+
     """
     TESTING
     """
-    # request_dict = {'projectID': "1",
-    #                 'project_name': 'Test',
-    #                 'to_be_member': None,  # no one
-    #                 'response': None,  # 1 is accepted 0 is denied
-    #                 'response_date': None}
-    # pending_project_dict = {'projectID': 1,
-    #                         'project_name': "yeah",
-    #                         'advisor': val[0],
-    #                         'evaluator': "1",
-    #                         'evaluator2': "2",
-    #                         'feedback': None,
-    #                         'feedback2': None,
-    #                         'score': None,
-    #                         'score2': None,
-    #                         'status': None}
-    # ad_request_dict = {'projectID': "1",
-    #                    'project_name': 'Test',
-    #                    'to_be_advisor': "1",  # Invite theGoat NOW!
-    #                    'response': None,  # 1 is accepted 0 is denied
-    #                    'response_date': None}
-    # advisor_pending_request_table.insert(ad_request_dict)
-    project_table.filter(lambda x: x["projectID"] == "1")
-    project_table.update(1, "status", "pending member")
+
+    project_dictionary = {"projectID": "1",  # THE ID IS VERY TEMPORARY
+                          "title": 'Test',
+                          "lead": "1",
+                          "member1": None,
+                          "member2": None,
+                          "advisor": "8466074",
+                          "status": None}
+    project_table.insert(project_dictionary)
     """
     TESTING
     """
+
     DB.insert(member_pending_request_table)
 
     project_evaluation_request_table = Table('pending_project', [])
@@ -321,7 +294,7 @@ def login_check(person_ID, role):
             projectID = this_project.table[0]["projectID"]
             project_name = this_project.table[0]["title"]
             project_advisor = this_project.table[0]["advisor"]
-            choice = check_choice(7)
+            choice = check_choice(9)
 
             if choice == 1:
                 this_lead.check_project_status()
@@ -387,6 +360,7 @@ def login_check(person_ID, role):
                     proposal_table.insert(request_dict)
                     project_table.update(projectID, "status",
                                          "pending proposal")
+                    print("Sent proposal to the project advisor.\n")
 
             elif choice == 7:
                 status = this_lead.send_report()
@@ -398,11 +372,12 @@ def login_check(person_ID, role):
                                     'response_date': None}
                     report_table.insert(request_dict)
                     project_table.update(projectID, "status", "pending report")
+                    print("Sent report to the project advisor.\n")
 
             elif choice == 8:
                 evaluator_ID, evaluator_ID2 = \
                     this_lead.request_project_evaluation()
-                if not evaluator_ID:  # If cancelled
+                if evaluator_ID == 0 and evaluator_ID2 == 0:
                     continue
                 request_dict = {'projectID': this_project["projectID"],
                                 'project_name': this_project["title"],
@@ -549,14 +524,14 @@ def login_check(person_ID, role):
                 elif accept == 1:
                     proposal_table.update(ID, "response", "1")
                     if not check_pending(ID):
-                        project_table.update(ID, "status", None)
+                        project_table.update(ID, "status", "ready for report")
                     print("You approved this proposal.\n")
 
                 elif accept == -1:
                     proposal_table.update(ID, "response", "-1")
                     if not check_pending(ID):
                         project_table.update(ID, "status", None)
-                    print("You approved this proposal.\n")
+                    print("You rejected this proposal.\n")
 
             elif choice == 2:
                 accept, ID = this_advisor.read_report()
@@ -566,14 +541,15 @@ def login_check(person_ID, role):
                 elif accept == 1:
                     report_table.update(ID, "response", "1")
                     if not check_pending(ID):
-                        project_table.update(ID, "status", None)
+                        project_table.update(ID, "status",
+                                             "ready for evaluation")
                     print("You approved this report.\n")
 
                 elif accept == -1:
                     report_table.update(ID, "response", "-1")
                     if not check_pending(ID):
                         project_table.update(ID, "status", None)
-                    print("You approved this report.\n")
+                    print("You rejected this report.\n")
 
             elif choice == 3:
                 login_check(person_ID, "faculty")
