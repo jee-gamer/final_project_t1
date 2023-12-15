@@ -1,10 +1,11 @@
 # import database module
-import random
+
+import csv
+import os
+from datetime import date
 
 from database import Table, Database
-import csv, os, copy
-from roles import student, member, lead, faculty
-from datetime import date
+from roles import student, lead, faculty
 
 __location__ = os.path.realpath(
     os.path.join(os.getcwd(), os.path.dirname(__file__)))
@@ -34,10 +35,6 @@ def write_csv(name, list_dict):  # working
     for dictionary in list_dict:
         writer.writerow(dictionary.values())
     myFile.close()
-
-
-# def exit():
-#     pass
 
 
 DB = Database()
@@ -86,21 +83,21 @@ def initializing():
     """
     TESTING
     """
-    request_dict = {'projectID': "1",
-                    'project_name': 'Test',
-                    'to_be_member': None,  # no one
-                    'response': None,  # 1 is accepted 0 is denied
-                    'response_date': None}
-    pending_project_dict = {'projectID': 1,
-                            'project_name': "yeah",
-                            'advisor': val[0],
-                            'evaluator': "1",
-                            'evaluator2': "2",
-                            'feedback': None,
-                            'feedback2': None,
-                            'score': None,
-                            'score2': None,
-                            'status': None}
+    # request_dict = {'projectID': "1",
+    #                 'project_name': 'Test',
+    #                 'to_be_member': None,  # no one
+    #                 'response': None,  # 1 is accepted 0 is denied
+    #                 'response_date': None}
+    # pending_project_dict = {'projectID': 1,
+    #                         'project_name': "yeah",
+    #                         'advisor': val[0],
+    #                         'evaluator': "1",
+    #                         'evaluator2': "2",
+    #                         'feedback': None,
+    #                         'feedback2': None,
+    #                         'score': None,
+    #                         'score2': None,
+    #                         'status': None}
     # ad_request_dict = {'projectID': "1",
     #                    'project_name': 'Test',
     #                    'to_be_advisor': "1",  # Invite theGoat NOW!
@@ -112,12 +109,10 @@ def initializing():
     """
     TESTING
     """
-    member_pending_request_table.insert(request_dict)
     DB.insert(member_pending_request_table)
 
     project_evaluation_request_table = Table('pending_project', [])
     DB.insert(project_evaluation_request_table)
-    project_evaluation_request_table.insert(pending_project_dict)
 
     _assigned_project_table = Table('assigned_project', [])
     # This table use for accepted evaluation only
@@ -184,6 +179,7 @@ proposal_table = DB.search('proposal')
 report_table = DB.search('report')
 
 
+
 def check_pending(projectID):
     for request in request_table.table:
         if request["projectID"] == projectID and not request["response"]:
@@ -245,7 +241,7 @@ def login_check(person_ID, role):
                             """
                             request_table.update(project["projectID"],
                                                  "response",
-                                                 1)
+                                                 "1")
                             request_table.update(project["projectID"],
                                                  "response_date",
                                                  today)
@@ -275,7 +271,7 @@ def login_check(person_ID, role):
                         if project["projectID"] == ID:
                             request_table.update(project["projectID"],
                                                  "response",
-                                                 -1)
+                                                 "-1")
                             request_table.update(project["projectID"],
                                                  "response_date",
                                                  today)
@@ -306,8 +302,10 @@ def login_check(person_ID, role):
                   "3.Check request responses\n"
                   "4.Invite potential members\n"
                   "5.Invite potential advisor\n"
-                  "6.request project evaluation\n"
-                  "7.exit\n")
+                  "6.Send project proposal\n"
+                  "7.Send project report\n"
+                  "8.Request project evaluation\n"
+                  "9.Exit\n")
 
             this_student_info = login_table.filter(lambda x: x["ID"] == val[0])
             this_project = project_table.filter(lambda x: x["lead"] == val[0])
@@ -316,10 +314,13 @@ def login_check(person_ID, role):
                                   request_table.table,
                                   this_project.table,
                                   ad_request_table.table,
-                                  pending_project_table.table
+                                  pending_project_table.table,
+                                  proposal_table.table,
+                                  report_table.table
                                   )
             projectID = this_project.table[0]["projectID"]
             project_name = this_project.table[0]["title"]
+            project_advisor = this_project.table[0]["advisor"]
             choice = check_choice(7)
 
             if choice == 1:
@@ -376,6 +377,29 @@ def login_check(person_ID, role):
                                          )
 
             elif choice == 6:
+                status = this_lead.send_proposal()
+                if status:
+                    request_dict = {'projectID': projectID,
+                                    'project_name': project_name,
+                                    'advisor': project_advisor,
+                                    'response': None,
+                                    'response_date': None}
+                    proposal_table.insert(request_dict)
+                    project_table.update(projectID, "status",
+                                         "pending proposal")
+
+            elif choice == 7:
+                status = this_lead.send_report()
+                if status:
+                    request_dict = {'projectID': projectID,
+                                    'project_name': project_name,
+                                    'advisor': project_advisor,
+                                    'response': None,
+                                    'response_date': None}
+                    report_table.insert(request_dict)
+                    project_table.update(projectID, "status", "pending report")
+
+            elif choice == 8:
                 evaluator_ID, evaluator_ID2 = \
                     this_lead.request_project_evaluation()
                 if not evaluator_ID:  # If cancelled
@@ -391,8 +415,10 @@ def login_check(person_ID, role):
                                 'score2': None,
                                 'status': None}
                 pending_project_table.insert(request_dict)
+                project_table.update(projectID, "status",
+                                     "requesting evaluator")
 
-            elif choice == 7:
+            elif choice == 9:
                 exit()
 
     elif role == 'faculty':
@@ -408,7 +434,8 @@ def login_check(person_ID, role):
             this_faculty_info = login_table.filter(lambda x: x["ID"] == val[0])
             this_faculty = faculty.Faculty(person_ID, this_faculty_info.table,
                                            ad_request_table.table,
-                                           pending_project_table.table)
+                                           pending_project_table.table,
+                                           assigned_project_table.table)
 
             if choice == 1:
                 accept, ID = this_faculty.read_request()
@@ -423,7 +450,7 @@ def login_check(person_ID, role):
                             """
                             ad_request_table.update(project["projectID"],
                                                     "response",
-                                                    1)
+                                                    "1")
                             ad_request_table.update(project["projectID"],
                                                     "response_date",
                                                     today)
@@ -448,7 +475,7 @@ def login_check(person_ID, role):
                         if project["projectID"] == ID:
                             ad_request_table.update(project["projectID"],
                                                     "response",
-                                                    -1)
+                                                    "-1")
                             ad_request_table.update(project["projectID"],
                                                     "response_date",
                                                     today)
@@ -475,9 +502,10 @@ def login_check(person_ID, role):
                     print("You denied to evaluate this project\n")
                     continue
             elif choice == 3:
-                this_project = pending_project_table \
-                    .filter(lambda x: x["evaluator"] == val[0]).table
-                accept = this_faculty.read_accepted_request()
+                pass
+                # this_project = pending_project_table \
+                #     .filter(lambda x: x["evaluator"] == val[0]).table
+                # accept = this_faculty.read_accepted_request()
 
                 # if accept > 0:
                 #     pending_project_table.update(this_project['projectID'],
@@ -490,7 +518,6 @@ def login_check(person_ID, role):
                 #                                  "score",
                 #                                  "denied"
                 #                                  )
-                #     pass
 
             elif choice == 4:
                 exit()
@@ -498,19 +525,64 @@ def login_check(person_ID, role):
     elif role == 'advisor':
         while True:
             print("You can choose the following:\n"
-                  "1.request project evaluation\n"
-                  "2.exit\n"
+                  "1.Check proposal requests\n"
+                  "2.Check report requests\n"
+                  "3.Go to faculty menu\n"
+                  "4.exit\n"
                   )
 
-            # choice = check_choice(2)
-            # this_advisor_info = login_table.filter(lambda x: x["ID"] == val[0])
-            # this_advisor = advisor.Advisor(person_ID, this_advisor_info.table,
-            #                                pending_project_table)
-            # this_project = project_table\
-            #     .filter(lambda x: x["advisor"] == val[0]).table
+            choice = check_choice(4)
+            this_advisor_info = login_table.filter(lambda x: x["ID"] == val[0])
+            this_advisor = faculty.Advisor(person_ID,
+                                           this_advisor_info.table,
+                                           ad_request_table,
+                                           pending_project_table.table,
+                                           assigned_project_table.table,
+                                           proposal_table.table,
+                                           report_table.table)
+
+            if choice == 1:
+                accept, ID = this_advisor.read_proposal()
+
+                if accept == 0 and ID == 0:
+                    continue
+                elif accept == 1:
+                    proposal_table.update(ID, "response", "1")
+                    if not check_pending(ID):
+                        project_table.update(ID, "status", None)
+                    print("You approved this proposal.\n")
+
+                elif accept == -1:
+                    proposal_table.update(ID, "response", "-1")
+                    if not check_pending(ID):
+                        project_table.update(ID, "status", None)
+                    print("You approved this proposal.\n")
+
+            elif choice == 2:
+                accept, ID = this_advisor.read_report()
+
+                if accept == 0 and ID == 0:
+                    continue
+                elif accept == 1:
+                    report_table.update(ID, "response", "1")
+                    if not check_pending(ID):
+                        project_table.update(ID, "status", None)
+                    print("You approved this report.\n")
+
+                elif accept == -1:
+                    report_table.update(ID, "response", "-1")
+                    if not check_pending(ID):
+                        project_table.update(ID, "status", None)
+                    print("You approved this report.\n")
+
+            elif choice == 3:
+                login_check(person_ID, "faculty")
+                # if you want to come back to advisor have to log in again
+                break
 
 
 login_check(val[0], val[1])
 
 # while True:
 #     login_check(val[0], val[1])  # purpose is for sudden change in role only
+

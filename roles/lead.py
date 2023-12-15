@@ -1,12 +1,15 @@
 
 class Lead:
     def __init__(self, ID, info, request_table, project_info,
-                 ad_request_table, evaluate_table):
+                 ad_request_table, evaluate_table, proposal_table,
+                 report_table):
         self.ID = ID
         self.request_table = request_table
         self.project_info = project_info[0]
         self.ad_request_table = ad_request_table
         self.evaluate_table = evaluate_table
+        self.proposal_table = proposal_table
+        self.report_table = report_table
 
     def check_project_status(self):
         print(f"The project status is {self.project_info['status']}\n")
@@ -136,6 +139,38 @@ class Lead:
                       '\n')
                 return
         return faculty_id
+
+    def send_proposal(self):
+        for request in self.proposal_table:
+            if (
+                request["projectID"] == self.project_info["projectID"] and
+                not request["response"]
+            ):
+                print("You have already sent a proposal approval "
+                      "request to advisor.\n")
+                return False
+
+        return True
+
+    def send_report(self):
+        for request in self.proposal_table:
+            if (
+                request["projectID"] == self.project_info["projectID"] and
+                request["response"] == "1"
+            ):
+                print("The project proposal hasn't been approved yet!")
+                return False
+
+        for request in self.report_table:
+            if (
+                    request["projectID"] == self.project_info["projectID"] and
+                    not request["response"]
+            ):
+                print("You have already sent a report approval "
+                      "request to advisor.\n")
+                return False
+
+        return True
 
     def request_project_evaluation(self):
         if self.project_info['status'] == "passed":

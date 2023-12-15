@@ -25,12 +25,14 @@ request_dict = {'projectID': 1,
 proposal table
 request_dict = {'projectID': 1,
                 'project_name': 'Test',
+                'advisor': "999"
                 'response': None,  # 1 is accept -1 is denied
                 'response_date': None}
 
 report table
 request_dict = {'projectID': 1,
                 'project_name': 'Test',
+                'advisor': "999"
                 'response': None,  # 1 is accept -1 is denied
                 'response_date': None}
 
