@@ -142,14 +142,14 @@ class Lead:
 
     def send_proposal(self):
         for request in self.proposal_table:
-            if (
-                request["projectID"] == self.project_info["projectID"] and
-                not request["response"]
-            ):
-                print("You have already sent a proposal approval "
-                      "request to advisor.\n")
-                return False
-
+            if request["projectID"] == self.project_info["projectID"]:
+                if not request["response"]:
+                    print("You have already sent a proposal approval "
+                          "request to advisor.\n")
+                    return False
+                if request["response"] == "1":
+                    print("This project proposal is already approved\n")
+                    return False
         return True
 
     def send_report(self):
@@ -160,17 +160,20 @@ class Lead:
                 if not request["response"] or request["response"] == "-1":
                     print("The project proposal hasn't been approved yet!\n")
                     return False
-        if self.project_info["status"] != "ready for report":
-            print("You haven't sent the proposal yet!\n")
 
         for request in self.report_table:
-            if (
-                request["projectID"] == self.project_info["projectID"] and
-                not request["response"]
-            ):
-                print("You have already sent a report approval "
-                      "request to advisor.\n")
-                return False
+            if request["projectID"] == self.project_info["projectID"]:
+                if not request["response"]:
+                    print("You have already sent a report approval "
+                          "request to advisor.\n")
+                    return False
+                if request["response"] == "1":
+                    print("This project report is already approved\n")
+                    return False
+
+        if self.project_info["status"] != "ready for report":
+            print("You haven't sent the proposal yet!\n")
+            return False
 
         return True
 
@@ -178,6 +181,17 @@ class Lead:
         if self.project_info['status'] == "passed":
             print("This project is already passed\n")
             return 0, 0
+        for r in self.evaluate_table:
+            if r['projectID'] == self.project_info['projectID']:
+                if not r['status']:
+                    print("You have already sent a project evaluation request."
+                          "\n")
+                    return 0, 0
+                if r['status'] == "1":
+                    print("Evaluation request is already accepted."
+                          "\n")
+                    return 0, 0
+
         if self.project_info['status'] != "ready for evaluation":
             print("This project is not ready for evaluation yet.\n")
             return 0, 0

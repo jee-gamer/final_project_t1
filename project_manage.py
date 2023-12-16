@@ -2,6 +2,7 @@
 
 import csv
 import os
+import glob
 from datetime import date
 
 from database import Table, Database
@@ -16,7 +17,6 @@ def read_csv(file_name):
        # By now, you know how to read in a csv file and transform it into a list of dictionaries. For this project, you also need to know how to do the reverse, i.e., writing out to a csv file given a list of dictionaries. See the link below for a tutorial on how to do this:
 
    # https://www.pythonforbeginners.com/basics/list-of-dictionaries-to-csv-in-python
-   DID NOT DO YET
     """
     read_list = []
     with open(os.path.join(__location__, file_name)) as f:
@@ -27,78 +27,91 @@ def read_csv(file_name):
     return read_list
 
 
-def write_csv(name, list_dict):  # working
-    myFile = open(name, 'w')
-    writer = csv.writer(myFile)
-    row = [x for x in list_dict[0].keys()]
-    writer.writerow(row)
-    for dictionary in list_dict:
-        writer.writerow(dictionary.values())
-    myFile.close()
+def write_csv(name, list_dict):
+    if not list_dict:  # no dict then just don't write anything
+        return
+    with open(name, 'w', newline='', encoding='utf-8') as myFile:
+        writer = csv.writer(myFile)
+        row = [x for x in list_dict[0].keys()]
+        writer.writerow(row)
+        for dictionary in list_dict:
+            writer.writerow(dictionary.values())
 
 
 DB = Database()
 
 
-def official_exit():
-    pass
+def check_write_csv(file_name):
+    csv_file = glob.glob(os.path.join(__location__, f'{file_name}.csv'))
+    if csv_file:
+        table = Table(file_name, read_csv(f'{file_name}.csv'))
+    else:
+        table = Table(file_name, [])
+    DB.insert(table)
+
+
+def make_empty_table(name):
+    table = Table(name, [])
+    DB.insert(table)
+
+
+def log_out():
+    write_csv("persons.csv", DB.search('persons').table)
+    write_csv("login.csv", DB.search('login').table)
+    write_csv("project.csv", DB.search('project').table)
+    write_csv("advisor_request.csv", DB.search('advisor_request').table)
+    write_csv("member_request.csv", DB.search('member_request').table)
+    write_csv("pending_project.csv", DB.search('pending_project').table)
+    write_csv("assigned_project.csv", DB.search('assigned_project').table)
+    write_csv("proposal.csv", DB.search('proposal').table)
+    write_csv("report.csv", DB.search('report').table)
+    exit()
 
 
 def initializing():
-    # create a 'persons' table
+
     persons_table = Table('persons', read_csv('persons.csv'))
-
-    # add the 'persons' table into the database
-
     DB.insert(persons_table)
 
-    # create a 'login' table
-    login_table = Table('login', read_csv('login.csv'))
-    DB.insert(login_table)
-    print(login_table)
+    _login_table = Table('login', read_csv('login.csv'))
+    DB.insert(_login_table)
+    print(_login_table)
 
-    project_table = Table('project', [])
-    DB.insert(project_table)
+    check_write_csv("project")
+    check_write_csv("advisor_request")
+    check_write_csv("member_request")
+    check_write_csv("pending_project")
+    check_write_csv("assigned_project")
+    check_write_csv("proposal")
+    check_write_csv("report")
 
-    advisor_pending_request_table = Table('advisor_request', [])
-    # stuff here
-    DB.insert(advisor_pending_request_table)
 
-    member_pending_request_table = Table('member_request', [])
-
-    """
-    TESTING
-    """
-
+def testing():
     project_dictionary = {"projectID": "1",  # THE ID IS VERY TEMPORARY
                           "title": 'Test',
                           "lead": "1",
                           "member1": None,
                           "member2": None,
-                          "advisor": "8466074",
+                          "advisor": "2",
                           "status": None}
-    project_table.insert(project_dictionary)
-    """
-    TESTING
-    """
-
-    DB.insert(member_pending_request_table)
-
-    project_evaluation_request_table = Table('pending_project', [])
-    DB.insert(project_evaluation_request_table)
-
-    _assigned_project_table = Table('assigned_project', [])
-    # This table use for accepted evaluation only
-    DB.insert(_assigned_project_table)
-
-    _proposal_table = Table('proposal', [])
-    DB.insert(_proposal_table)
-    _report_table = Table('report', [])
-    DB.insert(_report_table)
+    DB.search('project').insert(project_dictionary)
 
 
-def log_out():
-    pass
+def reset():
+    persons_table = Table('persons', read_csv('persons.csv'))
+    DB.insert(persons_table)
+
+    _login_table = Table('login', read_csv('login.csv'))
+    DB.insert(_login_table)
+    print(_login_table)
+
+    make_empty_table("project")
+    make_empty_table("advisor_request")
+    make_empty_table("member_request")
+    make_empty_table("pending_project")
+    make_empty_table("assigned_project")
+    make_empty_table("proposal")
+    make_empty_table("report")
 
 
 def login():
@@ -152,7 +165,6 @@ proposal_table = DB.search('proposal')
 report_table = DB.search('report')
 
 
-
 def check_pending(projectID):
     for request in request_table.table:
         if request["projectID"] == projectID and not request["response"]:
@@ -168,6 +180,8 @@ def check_pending(projectID):
 def check_choice(choice_number):
     while True:
         choice = input("Enter your choice: ")
+        if not choice:
+            continue
         try:
             choice = int(choice)
         except TypeError as e:
@@ -263,7 +277,7 @@ def login_check(person_ID, role):
                 login_check(person_ID, "lead")
                 break
             elif choice == 3:
-                exit()
+                log_out()
 
     elif role == 'member':
         pass
@@ -379,8 +393,19 @@ def login_check(person_ID, role):
                     this_lead.request_project_evaluation()
                 if evaluator_ID == 0 and evaluator_ID2 == 0:
                     continue
-                request_dict = {'projectID': this_project["projectID"],
-                                'project_name': this_project["title"],
+                faculty_table = login_table.filter \
+                    (lambda x: (x["role"] == "faculty" or
+                                x["role"] == "advisor"))
+                faculty_list = faculty_table.aggregate(lambda x: x, "ID")
+
+                if float(evaluator_ID) not in faculty_list:
+                    print("Evaluator1 is not a faculty!\n")
+                    continue
+                if float(evaluator_ID2) not in faculty_list:
+                    print("Evaluator2 is not a faculty!\n")
+
+                request_dict = {'projectID': projectID,
+                                'project_name': project_name,
                                 'advisor': val[0],
                                 'evaluator': evaluator_ID,
                                 'evaluator2': evaluator_ID2,
@@ -392,9 +417,10 @@ def login_check(person_ID, role):
                 pending_project_table.insert(request_dict)
                 project_table.update(projectID, "status",
                                      "requesting evaluator")
+                print()
 
             elif choice == 9:
-                exit()
+                log_out()
 
     elif role == 'faculty':
         while True:
@@ -495,7 +521,7 @@ def login_check(person_ID, role):
                 #                                  )
 
             elif choice == 4:
-                exit()
+                log_out()
 
     elif role == 'advisor':
         while True:
@@ -510,7 +536,7 @@ def login_check(person_ID, role):
             this_advisor_info = login_table.filter(lambda x: x["ID"] == val[0])
             this_advisor = faculty.Advisor(person_ID,
                                            this_advisor_info.table,
-                                           ad_request_table,
+                                           ad_request_table.table,
                                            pending_project_table.table,
                                            assigned_project_table.table,
                                            proposal_table.table,
@@ -523,12 +549,14 @@ def login_check(person_ID, role):
                     continue
                 elif accept == 1:
                     proposal_table.update(ID, "response", "1")
+                    proposal_table.update(ID, "response_date", today)
                     if not check_pending(ID):
                         project_table.update(ID, "status", "ready for report")
                     print("You approved this proposal.\n")
 
                 elif accept == -1:
                     proposal_table.update(ID, "response", "-1")
+                    proposal_table.update(ID, "response_date", today)
                     if not check_pending(ID):
                         project_table.update(ID, "status", None)
                     print("You rejected this proposal.\n")
@@ -540,6 +568,7 @@ def login_check(person_ID, role):
                     continue
                 elif accept == 1:
                     report_table.update(ID, "response", "1")
+                    report_table.update(ID, "response_date", today)
                     if not check_pending(ID):
                         project_table.update(ID, "status",
                                              "ready for evaluation")
@@ -547,6 +576,7 @@ def login_check(person_ID, role):
 
                 elif accept == -1:
                     report_table.update(ID, "response", "-1")
+                    report_table.update(ID, "response_date", today)
                     if not check_pending(ID):
                         project_table.update(ID, "status", None)
                     print("You rejected this report.\n")
@@ -555,6 +585,9 @@ def login_check(person_ID, role):
                 login_check(person_ID, "faculty")
                 # if you want to come back to advisor have to log in again
                 break
+
+            elif choice == 4:
+                log_out()
 
 
 login_check(val[0], val[1])
