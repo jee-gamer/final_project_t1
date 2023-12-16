@@ -94,5 +94,11 @@ class Table:
             if row == dictionary:
                 self.table.remove(row)
 
+    def remove_this(self, ID):
+        for row in self.table:
+            row_list = [x for x in row.keys()]
+            if row[row_list[0]] == ID:
+                self.table.remove(row)
+
     def __str__(self):
         return self.table_name + ':' + str(self.table)

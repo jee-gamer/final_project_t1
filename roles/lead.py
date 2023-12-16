@@ -89,6 +89,15 @@ class Lead:
         if self.project_info["member1"] and self.project_info["member2"]:
             print("Your project member is already full.\n")
             return
+        acceptable_status = [None, "pending member"]
+        if self.project_info['status'] not in acceptable_status:
+            print("You can't invite people anymore")
+            print("Since you have either")
+            print("1. Already sent advisor request")
+            print("2. Already sent proposal request to advisor")
+            print("3. Already made a lot of progress into the project\n")
+            return
+
         student_id = input("Enter the id of the student you want to invite: ")
         try:
             student_id = int(student_id)
@@ -112,35 +121,45 @@ class Lead:
         return student_id
 
     def send_request_advisor(self):
-        if self.project_info["advisor"]:
-            print('You already have a project advisor.\n')
-            return
-        for request in self.request_table:
-            if (
-                request["projectID"] == self.project_info["projectID"] and
-                not request["response"]
-            ):
-                print("There's still pending member requests.\n")
+        print("Are you sure? You won't be able to invite more member after"
+              "you request an advisor.")
+        accept = input("Enter your choice (y/n): ")
+        if accept == "y":
+            if self.project_info["advisor"]:
+                print('You already have a project advisor.\n')
                 return
+            for request in self.request_table:
+                if (
+                    request["projectID"] == self.project_info["projectID"] and
+                    not request["response"]
+                ):
+                    print("There's still pending member requests.\n")
+                    return
 
-        faculty_id = input("Enter the id of the faculty you want to invite: ")
-        try:
-            faculty_id = int(faculty_id)
-            faculty_id = str(faculty_id)
-        except ValueError as e:
-            print(e, "// faculty_id must be integers!\n")
-            return
-        for request in self.ad_request_table:  # Check if already requested
-            if (
-                request["projectID"] == self.project_info["projectID"] and
-                not request["response"]
-            ):
-                print('You have already requested an advisor for this project.'
-                      '\n')
+            faculty_id = input(
+                "Enter the id of the faculty you want to invite: ")
+            try:
+                faculty_id = int(faculty_id)
+                faculty_id = str(faculty_id)
+            except ValueError as e:
+                print(e, "// faculty_id must be integers!\n")
                 return
-        return faculty_id
+            for request in self.ad_request_table:  # Check if already requested
+                if (
+                    request["projectID"] == self.project_info["projectID"] and
+                    not request["response"]
+                ):
+                    print('You have already requested an advisor for'
+                          ' this project.'
+                          '\n')
+                    return
+            return faculty_id
+        return
 
     def send_proposal(self):
+        if not self.project_info['advisor']:
+            print("You don't have a project advisor yet\n")
+            return False
         for request in self.proposal_table:
             if request["projectID"] == self.project_info["projectID"]:
                 if not request["response"]:

@@ -1,8 +1,11 @@
-
 class Faculty:
-    def __init__(self, ID, info, advisor_table, evaluate_table,
-                 assigned_table):
+    def __init__(self, ID, info, advisor_table, evaluate_table_real,
+                 assigned_table, project_table):
+        self.evaluate_requests = None
         self.ID = ID
+        self.evaluate_table = evaluate_table_real.table
+        self.evaluate_table_real = evaluate_table_real
+        self.project_table = project_table
         request = []
         for r in advisor_table:
             if r['to_be_advisor'] == ID and not r['response']:
@@ -10,20 +13,12 @@ class Faculty:
                 request.append([r["projectID"], r["project_name"]])
         self.requests = request
 
-        request = []
-        for r in evaluate_table:
-            if r['evaluator'] == ID and not r['status']:
-                request.append([r["projectID"], r["project_name"], 1])
-            elif r['evaluator2'] == ID and not r['status']:
-                request.append([r["projectID"], r["project_name"], 2])
-        self.evaluate_requests = request
-
         assigned_project = []
         for r in assigned_table:
-            if r['evaluator'] == ID and not r['status']:
-                request.append([r["projectID"], r["project_name"], 1])
-            elif r['evaluator2'] == ID and not r['status']:
-                request.append([r["projectID"], r["project_name"], 2])
+            if r['evaluator'] == ID and not r['score']:
+                assigned_project.append([r, 1])
+            elif r['evaluator2'] == ID and not r['score2']:
+                assigned_project.append([r, 2])
         self.assigned_project = assigned_project
 
     def read_request(self):
@@ -59,6 +54,21 @@ class Faculty:
         return None
 
     def read_evaluate_request(self):
+        request = []
+        for r in self.evaluate_table:
+            if r['evaluator'] == self.ID:
+                if not r['status']:
+                    request.append([r["projectID"], r["project_name"], 1])
+                if r['status'] == "evaluator2 accepted":
+                    request.append([r["projectID"], r["project_name"], 1])
+
+            elif r['evaluator2'] == self.ID:
+                if not r['status']:
+                    request.append([r["projectID"], r["project_name"], 2])
+                if r['status'] == "evaluator1 accepted":
+                    request.append([r["projectID"], r["project_name"], 2])
+        self.evaluate_requests = request
+        
         for ID, name, _ in self.evaluate_requests:
             print()
             print(f"You were requested to evaluate project '{name}', id: {ID}."
@@ -66,14 +76,14 @@ class Faculty:
                   )
         if not self.evaluate_requests:
             print("There are no requests.\n")
-            return 0, 0
+            return 0, 0, 0
         go_next = input("Do you want to answer the requests? (y/n): ")
         if go_next == "y":
             print("\nYou can accept/deny/ignore these requests.")
             return self.answer_evaluate_request()
         elif go_next == "n":
             print("You refused to answer any requests\n")
-            return 0, 0
+            return 0, 0, 0
         print("exiting.")
 
     def answer_evaluate_request(self):
@@ -85,52 +95,65 @@ class Faculty:
             accept = input("Your answer (y/n): ")
             if accept == "n":
                 self.evaluate_requests.remove([ID, name, number])
-                return -1, str(ID)
+                return -1, str(ID), number
             elif accept == "y":
-                return 1, str(ID)  # return project ID and 1 == accept
+                self.evaluate_requests.remove([ID, name, number])
+                return 1, str(ID), number  # return project ID and 1 == accept
 
-        return None
+        return 0, 0, 0
 
-    def evaluate_project(self, ID, number):
-        print("What do you think about this project?")
-        feedback = input("Enter your feedback here: ")
-        print("Please rate the project from 1-10. (Enter -1 if project fails.")
-        while True:
-            accept = input("Enter the score: ")
-            if not isinstance(accept, int):
-                print("The score can only be integers!")
-                continue
-            if accept < -1:
-                print("Cannot give score lower than -1.")
-                continue
-            break
+    def evaluate_project(self):
+        if not self.assigned_project:
+            print("There is no assigned project.\n")
+            return
 
-    # def read_accepted_request(self):
-    #     for ID, name, _ in self.evaluate_requests:
-    #         print()
-    #         print(
-    #             f"You were requested to evaluate project '{name}', id: {ID}."
-    #             )
-    #     if not self.evaluate_requests:
-    #         print("There are no requests.\n")
-    #         return 0, 0
-    #     go_next = input("Do you want to answer the requests? (y/n): ")
-    #     if go_next == "y":
-    #         print("\nYou can accept/deny/ignore these requests.")
-    #         return self.answer_evaluate_request()
-    #     elif go_next == "n":
-    #         print("You refused to answer any requests\n")
-    #         return 0, 0
-    #     print("exiting.")
-    #
-    #     return accept, str(ID), feedback, number  # return score and projectID
+        for r, number in self.assigned_project:
+            print(f"This is project |{r['project_name']}|, id: {r['projectID']}")
+            print("What do you think about this project?")
+            feedback = input("Enter your feedback here: ")
+            print("Please rate the project from 1-10. "
+                  "(To reject the project enter -1.)")
+            while True:
+                accept = input("Enter the score: ")
+                try:
+                    accept = int(accept)
+                except Exception as e:
+                    print("The score can only be integers!")
+                    continue
+                if accept < -1:
+                    print("Cannot give score lower than -1.")
+                    continue
+                if accept > 10:
+                    print("Cannot give score higher than 10.")
+                    continue
+                break
+            if number == 1:
+                number = ""
+
+            r[f"feedback{number}"] = feedback
+            r[f"score{number}"] = accept
+
+            print("You have successfully evaluated this project.\n")
+
+            if r['score'] and r['score2']:
+                if r['score'] == "-1" or r['score2'] == "-1":
+                    r['status'] = "rejected"
+                    for row in self.project_table:
+                        if row['projectID'] == r['projectID']:
+                            row['status'] = "ready for evaluation"
+                    self.evaluate_table_real.remove_this(r['projectID'])
+                else:
+                    r['status'] = "passed"
+                    for row in self.project_table:
+                        if row['projectID'] == r['projectID']:
+                            row['status'] = "passed"
 
 
 class Advisor(Faculty):
     def __init__(self, ID, info, advisor_table, evaluate_table,
-                 assigned_table, proposal_table, report_table):
+                 assigned_table, project_table, proposal_table, report_table):
         super().__init__(ID, info, advisor_table, evaluate_table,
-                         assigned_table)
+                         assigned_table, project_table)
 
         request = []
         for r in proposal_table:

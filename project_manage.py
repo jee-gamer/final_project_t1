@@ -3,6 +3,7 @@
 import csv
 import os
 import glob
+import time
 from datetime import date
 
 from database import Table, Database
@@ -28,8 +29,10 @@ def read_csv(file_name):
 
 
 def write_csv(name, list_dict):
-    if not list_dict:  # no dict then just don't write anything
-        return
+    if not list_dict:
+        with open(name, 'w', newline='', encoding='utf-8') as myFile:
+            return  # replace with nothing
+
     with open(name, 'w', newline='', encoding='utf-8') as myFile:
         writer = csv.writer(myFile)
         row = [x for x in list_dict[0].keys()]
@@ -69,7 +72,6 @@ def log_out():
 
 
 def initializing():
-
     persons_table = Table('persons', read_csv('persons.csv'))
     DB.insert(persons_table)
 
@@ -406,18 +408,14 @@ def login_check(person_ID, role):
 
                 request_dict = {'projectID': projectID,
                                 'project_name': project_name,
-                                'advisor': val[0],
+                                'advisor': project_advisor,
                                 'evaluator': evaluator_ID,
                                 'evaluator2': evaluator_ID2,
-                                'feedback': None,
-                                'feedback2': None,
-                                'score': None,
-                                'score2': None,
                                 'status': None}
                 pending_project_table.insert(request_dict)
                 project_table.update(projectID, "status",
                                      "requesting evaluator")
-                print()
+                print("Successfully requested the project evaluation.\n")
 
             elif choice == 9:
                 log_out()
@@ -435,8 +433,9 @@ def login_check(person_ID, role):
             this_faculty_info = login_table.filter(lambda x: x["ID"] == val[0])
             this_faculty = faculty.Faculty(person_ID, this_faculty_info.table,
                                            ad_request_table.table,
-                                           pending_project_table.table,
-                                           assigned_project_table.table)
+                                           pending_project_table,
+                                           assigned_project_table.table,
+                                           project_table.table)
 
             if choice == 1:
                 accept, ID = this_faculty.read_request()
@@ -484,14 +483,49 @@ def login_check(person_ID, role):
                             continue
 
             elif choice == 2:
-                accept, ID = this_faculty.read_evaluate_request()
+                accept, ID, number = this_faculty.read_evaluate_request()
                 if accept == 0 and ID == 0:
                     continue
                 this_project = project_table \
                     .filter(lambda x: x["projectID"] == ID).table
-                if accept == 1:
-                    pending_project_table.update(ID, "evaluator", val[0])
+                evaluator = "evaluator1"
+                if number == 2:
+                    evaluator = "evaluator2"
+
+                def assign_project():
+                    pending_project_table.update(ID,
+                                                 "status",
+                                                 "both evaluator accepted"
+                                                 )
                     project_table.update(ID, "status", "evaluating")
+                    _project_name = project_table.find(ID, "title")
+                    _project_advisor = project_table.find(ID, "advisor")
+                    _evaluator = pending_project_table.find(ID, "evaluator")
+                    _evaluator2 = pending_project_table.find(ID, "evaluator2")
+                    _request_dict = {'projectID': ID,
+                                     'project_name': _project_name,
+                                     'advisor': _project_advisor,
+                                     'evaluator': _evaluator,
+                                     'evaluator2': _evaluator2,
+                                     'feedback': None,
+                                     'feedback2': None,
+                                     'score': None,
+                                     'score2': None,
+                                     'status': None}
+                    assigned_project_table.insert(_request_dict)
+
+                if accept == 1:
+                    if ((pending_project_table.find(ID, "status") ==
+                         "evaluator1 accepted" and number == 2) or
+                            (pending_project_table.find(ID, "status") ==
+                             "evaluator2 accepted" and number == 1)):
+                        assign_project()
+                    else:
+                        pending_project_table.update(ID,
+                                                     "status",
+                                                     f"{evaluator} accepted"
+                                                     )
+
                     print("You accepted to evaluate this project\n")
                     continue
                 elif accept == -1:
@@ -499,26 +533,12 @@ def login_check(person_ID, role):
                         project_table.update(ID, "status", None)
                     pending_project_table.update(ID,
                                                  "status",
-                                                 "faculty rejected")
+                                                 f"{evaluator} rejected")
                     print("You denied to evaluate this project\n")
                     continue
-            elif choice == 3:
-                pass
-                # this_project = pending_project_table \
-                #     .filter(lambda x: x["evaluator"] == val[0]).table
-                # accept = this_faculty.read_accepted_request()
 
-                # if accept > 0:
-                #     pending_project_table.update(this_project['projectID'],
-                #                                  "score",
-                #                                  accept
-                #                                  )
-                #     print(f"You approved this project with score {accept} !")
-                # elif accept == -1:
-                #     pending_project_table.update(this_project['projectID'],
-                #                                  "score",
-                #                                  "denied"
-                #                                  )
+            elif choice == 3:
+                this_faculty.evaluate_project()
 
             elif choice == 4:
                 log_out()
@@ -537,8 +557,9 @@ def login_check(person_ID, role):
             this_advisor = faculty.Advisor(person_ID,
                                            this_advisor_info.table,
                                            ad_request_table.table,
-                                           pending_project_table.table,
+                                           pending_project_table,
                                            assigned_project_table.table,
+                                           project_table.table,
                                            proposal_table.table,
                                            report_table.table)
 
@@ -594,4 +615,3 @@ login_check(val[0], val[1])
 
 # while True:
 #     login_check(val[0], val[1])  # purpose is for sudden change in role only
-
