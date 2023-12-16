@@ -7,7 +7,7 @@ import time
 from datetime import date
 
 from database import Table, Database
-from roles import student, lead, faculty
+from roles import student, lead, faculty, member
 
 __location__ = os.path.realpath(
     os.path.join(os.getcwd(), os.path.dirname(__file__)))
@@ -53,11 +53,6 @@ def check_write_csv(file_name):
     DB.insert(table)
 
 
-def make_empty_table(name):
-    table = Table(name, [])
-    DB.insert(table)
-
-
 def log_out():
     write_csv("persons.csv", DB.search('persons').table)
     write_csv("login.csv", DB.search('login').table)
@@ -88,15 +83,15 @@ def initializing():
     check_write_csv("report")
 
 
-def testing():
-    project_dictionary = {"projectID": "1",  # THE ID IS VERY TEMPORARY
-                          "title": 'Test',
-                          "lead": "1",
-                          "member1": None,
-                          "member2": None,
-                          "advisor": "2",
-                          "status": None}
-    DB.search('project').insert(project_dictionary)
+# def testing():
+#     project_dictionary = {"projectID": "1",  # THE ID IS VERY TEMPORARY
+#                           "title": 'Test',
+#                           "lead": "1",
+#                           "member1": None,
+#                           "member2": None,
+#                           "advisor": "2",
+#                           "status": None}
+#     DB.search('project').insert(project_dictionary)
 
 
 def reset():
@@ -107,13 +102,14 @@ def reset():
     DB.insert(_login_table)
     print(_login_table)
 
-    make_empty_table("project")
-    make_empty_table("advisor_request")
-    make_empty_table("member_request")
-    make_empty_table("pending_project")
-    make_empty_table("assigned_project")
-    make_empty_table("proposal")
-    make_empty_table("report")
+    write_csv("project.csv", [])
+    write_csv("advisor_request.csv", [])
+    write_csv("member_request.csv", [])
+    write_csv("pending_project.csv", [])
+    write_csv("assigned_project.csv", [])
+    write_csv("proposal.csv", [])
+    write_csv("report.csv", [])
+    exit()
 
 
 def login():
@@ -221,6 +217,9 @@ def login_check(person_ID, role):
                 accept, ID = this_student.read_request()
                 if accept == 0 and ID == 0:
                     continue
+                this_request_table = request_table.filter \
+                    (lambda x: x['projectID'] == ID and
+                               x['to_be_member'] == person_ID)
                 if accept == 1:
                     for project in project_table.table:
                         if project["projectID"] == ID:
@@ -228,42 +227,50 @@ def login_check(person_ID, role):
                             """
                             start adding student the be a member
                             """
-                            request_table.update(project["projectID"],
-                                                 "response",
-                                                 "1")
-                            request_table.update(project["projectID"],
-                                                 "response_date",
-                                                 today)
+                            this_request_table.update(project["projectID"],
+                                                      "response",
+                                                      "1")
+                            this_request_table.update(project["projectID"],
+                                                      "response_date",
+                                                      today)
+
                             if not project["member1"]:
                                 project["member1"] = person_ID
                                 login_table.update(person_ID, "role", "member")
                                 if not check_pending(ID):
-                                    project_table.update("1", "status",
-                                                         None)
+                                    project_table.update(ID, "status",
+                                                         "non")
                                 print(
                                     f"You have became a member of {name} "
                                     f"project.\n")
+                                login_check(person_ID, "member")
+                                break
                             elif not project["member2"]:
                                 project["member2"] = person_ID
                                 login_table.update(person_ID, "role", "member")
                                 if not check_pending(ID):
                                     project_table.update(ID, "status",
-                                                         None)
+                                                         "non")
                                 print(
                                     f"You have became a member of {name} "
                                     f"project.\n")
+                                login_check(person_ID, "member")
+                                break
                             else:
                                 print("The project is already full.")
                             continue
                 elif accept == -1:  # Denied
                     for project in project_table.table:
                         if project["projectID"] == ID:
-                            request_table.update(project["projectID"],
-                                                 "response",
-                                                 "-1")
-                            request_table.update(project["projectID"],
-                                                 "response_date",
-                                                 today)
+                            this_request_table.update(project["projectID"],
+                                                      "response",
+                                                      "-1")
+                            this_request_table.update(project["projectID"],
+                                                      "response_date",
+                                                      today)
+                            if not check_pending(ID):
+                                project_table.update(ID, "status",
+                                                     "non")
                             print("Denied the request.\n")
                             continue
 
@@ -282,7 +289,32 @@ def login_check(person_ID, role):
                 log_out()
 
     elif role == 'member':
-        pass
+        while True:
+            print("You can choose the following:\n"
+                  "1.See project status\n"
+                  "2.View project\n"
+                  "3.Check request responses\n"
+                  "4.Exit\n")
+            choice = check_choice(4)
+            this_member_info = login_table.filter(lambda x: x["ID"] == val[0])
+            this_project = \
+                project_table.filter(lambda x: x["member1"] == val[0])
+            if not this_project.table:
+                this_project = project_table.filter \
+                    (lambda x: x["member2"] == val[0])
+
+            this_member = member.Member(val[0], this_member_info,
+                                        request_table.table,
+                                        this_project.table)
+            if choice == 1:
+                this_member.check_project_status()
+            elif choice == 2:
+                this_member.view_project()
+            elif choice == 3:
+                this_member.check_responses()
+            elif choice == 4:
+                log_out()
+
     elif role == 'lead':
         while True:
             print("You can choose the following:\n"
@@ -405,6 +437,7 @@ def login_check(person_ID, role):
                     continue
                 if float(evaluator_ID2) not in faculty_list:
                     print("Evaluator2 is not a faculty!\n")
+                    continue
 
                 request_dict = {'projectID': projectID,
                                 'project_name': project_name,
@@ -486,8 +519,6 @@ def login_check(person_ID, role):
                 accept, ID, number = this_faculty.read_evaluate_request()
                 if accept == 0 and ID == 0:
                     continue
-                this_project = project_table \
-                    .filter(lambda x: x["projectID"] == ID).table
                 evaluator = "evaluator1"
                 if number == 2:
                     evaluator = "evaluator2"

@@ -10,6 +10,8 @@ class Lead:
         self.evaluate_table = evaluate_table
         self.proposal_table = proposal_table
         self.report_table = report_table
+        self.project_ID = self.project_info['projectID']
+        self.project_name = self.project_info['title']
 
     def check_project_status(self):
         print(f"The project status is '{self.project_info['status']}'\n")
@@ -89,7 +91,7 @@ class Lead:
         if self.project_info["member1"] and self.project_info["member2"]:
             print("Your project member is already full.\n")
             return
-        acceptable_status = [None, "pending member"]
+        acceptable_status = ["non", "pending member", None, ""]
         if self.project_info['status'] not in acceptable_status:
             print("You can't invite people anymore")
             print("Since you have either")
@@ -107,7 +109,7 @@ class Lead:
             return
         for request in self.request_table:
             if request["projectID"] == self.project_info["projectID"]:
-                if int(request["to_be_member"]) == student_id and \
+                if request["to_be_member"] == student_id and \
                    not request["response"]:
                     print("You have already invited this student.\n")
                     return
@@ -115,13 +117,21 @@ class Lead:
                     print("This student is already a member of your project.\n"
                           )
                     return
+                elif self.project_info["member2"] == student_id:
+                    print("This student is already a member of your project.\n"
+                          )
+                    return
+                elif request["to_be_member"] == student_id and\
+                        request["response"] == "-1":
+                    self.request_table.remove(request)
+
         if student_id == self.ID:
             print("You can't invite yourself!\n")
             return
         return student_id
 
     def send_request_advisor(self):
-        print("Are you sure? You won't be able to invite more member after"
+        print("Are you sure? You won't be able to invite more member after "
               "you request an advisor.")
         accept = input("Enter your choice (y/n): ")
         if accept == "y":
@@ -154,6 +164,8 @@ class Lead:
                           '\n')
                     return
             return faculty_id
+        else:
+            print()
         return
 
     def send_proposal(self):

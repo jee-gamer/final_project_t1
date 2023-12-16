@@ -3,29 +3,31 @@ class Student:
     def __init__(self, ID, info, request_table):
         # print(info)
         self.ID = ID
-        request = []
-        for r in request_table:
-            if r['to_be_member'] == ID and not r['response']:
-                # print(f"Project id = {r['projectID']}")
-                request.append([r["projectID"], r["project_name"]])
-        self.requests = request
+        self.requests = None
+        self.request_table = request_table
         self.role = info[0]["role"]
 
     def read_request(self):
-        for ID, name in self.requests:
-            print()
-            print(f"You were invited to project '{name}', id: {ID}.")
+        request = []
+        for r in self.request_table:
+            if r['to_be_member'] == self.ID and not r['response']:
+                # print(f"Project id = {r['projectID']}")
+                request.append([r["projectID"], r["project_name"]])
+        self.requests = request
+
         if not self.requests:
             print("There are no requests.\n")
             return 0, 0
+        for ID, name in self.requests:
+            print()
+            print(f"You were invited to project '{name}', id: {ID}.")
         go_next = input("Do you want to answer the requests? (y/n): ")
         if go_next == "y":
             print("\nYou can accept/deny/ignore these requests.")
             return self.answer_request()
-        elif go_next == "n":
+        else:
             print("You refused to answer any requests\n")
             return 0, 0
-        print("exiting.")
 
     def answer_request(self):
         copy_request = self.requests.copy()
@@ -40,8 +42,7 @@ class Student:
             elif accept == "y":
                 return 1, str(ID)  # return project ID and 1 == accept
 
-        print('returning none')
-        return None
+        return 0, 0
 
     def create_project(self):
         if self.requests:
