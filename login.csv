@@ -1,11 +1,4 @@
 ID,username,password,role
-1,TheGoat,1234,lead
-2,Gojo,1234,advisor
-3,Pookie1,1234,member
-4,Pookie2,1234,member
-5,Principal1,1234,faculty
-6,Principal2,1234,faculty
-7,TheAdmin,1234,admin
 7447677,Cristiano.R,2255,admin
 9898118,Lionel.M,2977,student
 5662557,Manuel.N,1244,student

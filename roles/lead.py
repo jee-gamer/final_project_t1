@@ -1,3 +1,5 @@
+import copy
+
 
 class Lead:
     def __init__(self, ID, info, request_table, project_info,
@@ -56,7 +58,10 @@ class Lead:
                       f" from your project?")
                 sure = input("(y/n): ")
                 if sure == "y":
+                    memberID = copy.deepcopy(self.project_info['member1'])
                     self.project_info['member1'] = None
+                    print(f"Kicked student {memberID} from your project.")
+                    return memberID
                 else:
                     print("You decided not to kick the member.\n")
                     continue
@@ -70,7 +75,10 @@ class Lead:
                       f" from your project?")
                 sure = input("(y/n): ")
                 if sure == "y":
+                    memberID = copy.deepcopy(self.project_info['member2'])
                     self.project_info['member2'] = None
+                    print(f"Kicked student {memberID} from your project.")
+                    return memberID
                 else:
                     print("You decided not to kick the member.\n")
                     continue
@@ -123,6 +131,9 @@ class Lead:
                     return
                 elif request["to_be_member"] == student_id and\
                         request["response"] == "-1":
+                    self.request_table.remove(request)
+                elif request["to_be_member"] == student_id and\
+                        request["response"] == "1":  # means kicked and invite
                     self.request_table.remove(request)
 
         if student_id == self.ID:
@@ -233,12 +244,19 @@ class Lead:
             try:
                 chosen_ev = int(chosen_ev)
                 chosen_ev2 = int(chosen_ev2)
+                chosen_ev = str(chosen_ev)
+                chosen_ev2 = str(chosen_ev2)
             except TypeError as e:
                 print(e, "// evaluator_id must be integers!")
                 continue
             if not chosen_ev or not chosen_ev2:
                 print("You cancelled the request.\n")
                 return None
+            advisor = self.project_info['advisor']
+            if chosen_ev == advisor or chosen_ev2 == advisor:
+                print("You can't choose a faculty that is the advisor of your"
+                      " project.\n")
+                continue
             return str(chosen_ev), str(chosen_ev2)
 
 

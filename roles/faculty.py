@@ -130,12 +130,14 @@ class Faculty:
             if number == 1:
                 number = ""
 
+            accept = str(accept)
             r[f"feedback{number}"] = feedback
             r[f"score{number}"] = accept
 
             print("You have successfully evaluated this project.\n")
 
             if r['score'] and r['score2']:
+                print(r['score'], r['score2'])
                 if r['score'] == "-1" or r['score2'] == "-1":
                     r['status'] = "rejected"
                     for row in self.project_table:

@@ -24,7 +24,6 @@ def read_csv(file_name):
         rows = csv.DictReader(f)
         for r in rows:
             read_list.append(dict(r))
-    print(read_list)
     return read_list
 
 
@@ -72,7 +71,6 @@ def initializing():
 
     _login_table = Table('login', read_csv('login.csv'))
     DB.insert(_login_table)
-    print(_login_table)
 
     check_write_csv("project")
     check_write_csv("advisor_request")
@@ -94,22 +92,22 @@ def initializing():
 #     DB.search('project').insert(project_dictionary)
 
 
-def reset():
-    persons_table = Table('persons', read_csv('persons.csv'))
-    DB.insert(persons_table)
-
-    _login_table = Table('login', read_csv('login.csv'))
-    DB.insert(_login_table)
-    print(_login_table)
-
-    write_csv("project.csv", [])
-    write_csv("advisor_request.csv", [])
-    write_csv("member_request.csv", [])
-    write_csv("pending_project.csv", [])
-    write_csv("assigned_project.csv", [])
-    write_csv("proposal.csv", [])
-    write_csv("report.csv", [])
-    exit()
+# def reset():
+#     persons_table = Table('persons', read_csv('persons.csv'))
+#     DB.insert(persons_table)
+#
+#     _login_table = Table('login', read_csv('login.csv'))
+#     DB.insert(_login_table)
+#     print(_login_table)
+#
+#     write_csv("project.csv", [])
+#     write_csv("advisor_request.csv", [])
+#     write_csv("member_request.csv", [])
+#     write_csv("pending_project.csv", [])
+#     write_csv("assigned_project.csv", [])
+#     write_csv("proposal.csv", [])
+#     write_csv("report.csv", [])
+#     exit()
 
 
 def login():
@@ -121,7 +119,7 @@ def login():
     # password
     # role
 
-    # add code that performs a login task; asking a user for a username and password; returning [person_id, role] if valid, otherwise returning None
+    # this code performs a login task; asking a user for a username and password; returning [person_id, role] if valid, otherwise returning None
     """
     while True:
         username = input('Username: ')
@@ -147,8 +145,11 @@ def login():
                         print("Login successful\n")
                         return [_person["ID"], _person["role"]]  # string
                     else:
+                        """
+                        log out right away if entered wrong password
+                        """
                         print("Wrong password!")
-                        continue
+                        return
 
 
 initializing()
@@ -222,17 +223,6 @@ class Admin:
                 else:
                     row[column] = new_value
                     print(f"Successfully updated the table '{table_name}'\n")
-
-    def create_table(self):
-        this_table_name = input("Enter the new table name: ")
-        for table in self.database_list:
-            if table.table_name == this_table_name:
-                print("That table already exist.\n")
-                return
-
-        empty_table = Table(this_table_name, [])
-        self.this_database.insert(empty_table)
-        print("Successfully created a new table\n")
 
     def insert_row(self, table_name):
         this_table = self.this_database.search(table_name)
@@ -310,13 +300,12 @@ def login_check(person_ID, role):
             print("You can choose the following:\n"
                   "1.Update Table\n"
                   "2.Clear Table\n"
-                  "3.Create Table\n"
-                  "4.Insert data\n"
-                  "5.Delete row\n"
-                  "6.Exit\n"
+                  "3.Insert data\n"
+                  "4.Delete row\n"
+                  "5.Exit\n"
                   )
 
-            choice = check_choice(6)
+            choice = check_choice(5)
             this_admin = Admin(person_ID)
             if choice == 1:
                 chosen_table = this_admin.choose_table()
@@ -331,21 +320,18 @@ def login_check(person_ID, role):
                 this_admin.clear_table(chosen_table)
 
             elif choice == 3:
-                this_admin.create_table()
-
-            elif choice == 4:
                 chosen_table = this_admin.choose_table()
                 if not chosen_table:
                     continue
                 this_admin.insert_row(chosen_table)
 
-            elif choice == 5:
+            elif choice == 4:
                 chosen_table = this_admin.choose_table()
                 if not chosen_table:
                     continue
                 this_admin.delete_row(chosen_table)
 
-            elif choice == 6:
+            elif choice == 5:
                 log_out()
 
     elif role == 'student':
@@ -499,7 +485,9 @@ def login_check(person_ID, role):
                 this_lead.check_project_status()
 
             elif choice == 2:
-                this_lead.modify_project()
+                kick = this_lead.modify_project()
+                if kick:
+                    login_table.update(kick, "role", "student")
 
             elif choice == 3:
                 this_lead.check_responses()
@@ -534,9 +522,10 @@ def login_check(person_ID, role):
                               f" doesn't exist.\n")
                         continue
                     elif login_table.find(advisor_ID, "role") != "faculty":
-                        print("The person you are requesting is not"
-                              " a faculty.\n")
-                        continue
+                        if login_table.find(advisor_ID, "role") != "advisor":
+                            print("The person you are requesting is not"
+                                  " a faculty.\n")
+                            continue
                     request_dict = {'projectID': projectID,
                                     'project_name': project_name,
                                     'to_be_advisor': advisor_ID,
@@ -645,6 +634,7 @@ def login_check(person_ID, role):
                                 if not check_pending(ID):
                                     project_table.update(ID, "status",
                                                          None)
+                                project['status'] = "ready for proposal"
                                 print(
                                     f"You have became an advisor of {name} "
                                     f"project.\n")
@@ -793,10 +783,8 @@ def login_check(person_ID, role):
                 log_out()
 
 
+if not val:
+    log_out()
+
 login_check(val[0], val[1])
-
-# while True:
-#     login_check(val[0], val[1])  # purpose is for sudden change in role only
-
-
 
