@@ -163,6 +163,116 @@ proposal_table = DB.search('proposal')
 report_table = DB.search('report')
 
 
+class Admin:
+    def __init__(self, ID):
+        self.ID = ID
+        self.database_list = DB.database
+        self.this_database = DB
+
+    def choose_table(self):
+        print("There are following tables:\n")
+        for index, table in enumerate(self.database_list):
+            print(index, table.table_name)
+        print()
+        choose = input("Enter the name of table you want to choose: ")
+        print(f"Chosen table '{choose}'")
+        check = self.this_database.search(choose)
+        if not check:
+            print(f"Table '{choose}' doesn't exist.\n")
+            return
+        return choose
+
+    def clear_table(self, table_name):
+        clear_this = self.this_database.search(table_name)
+        self.database_list.remove(clear_this)
+        empty_table = Table(table_name, [])
+        self.this_database.insert(empty_table)
+        print(f"Successfully cleared the table {table_name}\n")
+
+    def update_table(self, table_name):
+        this_table = self.this_database.search(table_name)
+        for index, row in enumerate(this_table.table):
+            print(index, row)
+
+        while True:
+            update = input("Enter the row index you want to update: ")
+            try:
+                update = int(update)
+            except TypeError as e:
+                print(e, "// row index must be integers!\n")
+                continue
+            try:
+                print(this_table.table[update])
+            except IndexError as e:
+                print("That row doesn't exist")
+                continue
+            break
+
+        column = input("Enter the column name you want to update: ")
+        new_value = input("Enter the new value: ")
+        for index, row in enumerate(this_table.table):
+            if index == update:
+                name_list = []
+                for name in row.keys():
+                    name_list.append(name)
+
+                if column not in name_list:
+                    print("That column doesn't exist.")
+                    return
+                else:
+                    row[column] = new_value
+                    print(f"Successfully updated the table '{table_name}'\n")
+
+    def create_table(self):
+        this_table_name = input("Enter the new table name: ")
+        for table in self.database_list:
+            if table.table_name == this_table_name:
+                print("That table already exist.\n")
+                return
+
+        empty_table = Table(this_table_name, [])
+        self.this_database.insert(empty_table)
+        print("Successfully created a new table\n")
+
+    def insert_row(self, table_name):
+        this_table = self.this_database.search(table_name)
+        new_dict = {}
+
+        for column in this_table.table[0].keys():
+            print(column)
+            new_value = input("Enter value for this column: ")
+            new_dict[column] = new_value
+
+        print(new_dict)
+        this_table.insert(new_dict)
+
+        print('Successfully inserted the row.\n')
+
+    def delete_row(self, table_name):
+        this_table = self.this_database.search(table_name)
+
+        for index, row in enumerate(this_table.table):
+            print(index, row)
+        print()
+
+        removed_row = ""
+        while True:
+            delete_row = input("Enter row index you want to remove: ")
+            try:
+                delete_row = int(delete_row)
+            except TypeError as e:
+                print(e, "// row index must be integers!\n")
+                continue
+            try:
+                removed_row = this_table.table.pop(delete_row)
+            except IndexError as e:
+                print("That row doesn't exist.")
+                continue
+            break
+
+        print(f"Successfully removed the row {removed_row}\n")
+
+
 def check_pending(projectID):
     for request in request_table.table:
         if request["projectID"] == projectID and not request["response"]:
@@ -196,14 +306,54 @@ val = login()
 def login_check(person_ID, role):
     today = date.today()
     if role == 'admin':
-        pass
+        while True:
+            print("You can choose the following:\n"
+                  "1.Update Table\n"
+                  "2.Clear Table\n"
+                  "3.Create Table\n"
+                  "4.Insert data\n"
+                  "5.Delete row\n"
+                  "6.Exit\n"
+                  )
+
+            choice = check_choice(6)
+            this_admin = Admin(person_ID)
+            if choice == 1:
+                chosen_table = this_admin.choose_table()
+                if not chosen_table:
+                    continue
+                this_admin.update_table(chosen_table)
+
+            elif choice == 2:
+                chosen_table = this_admin.choose_table()
+                if not chosen_table:
+                    continue
+                this_admin.clear_table(chosen_table)
+
+            elif choice == 3:
+                this_admin.create_table()
+
+            elif choice == 4:
+                chosen_table = this_admin.choose_table()
+                if not chosen_table:
+                    continue
+                this_admin.insert_row(chosen_table)
+
+            elif choice == 5:
+                chosen_table = this_admin.choose_table()
+                if not chosen_table:
+                    continue
+                this_admin.delete_row(chosen_table)
+
+            elif choice == 6:
+                log_out()
 
     elif role == 'student':
         while True:
             print("You can choose the following:\n"
                   "1.Check requests\n"
                   "2.Create project\n"
-                  "3.exit\n"
+                  "3.Exit\n"
                   )
 
             choice = check_choice(3)
@@ -211,7 +361,8 @@ def login_check(person_ID, role):
             this_student_info = login_table \
                 .filter(lambda x: x["ID"] == person_ID)
             this_student = student.Student(person_ID, this_student_info.table,
-                                           request_table.table)
+                                           request_table.table,
+                                           project_table.table)
 
             if choice == 1:
                 accept, ID = this_student.read_request()
@@ -646,3 +797,6 @@ login_check(val[0], val[1])
 
 # while True:
 #     login_check(val[0], val[1])  # purpose is for sudden change in role only
+
+
+

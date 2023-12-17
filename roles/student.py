@@ -1,10 +1,13 @@
+import random
+
 
 class Student:
-    def __init__(self, ID, info, request_table):
+    def __init__(self, ID, info, request_table, project_table):
         # print(info)
         self.ID = ID
         self.requests = None
         self.request_table = request_table
+        self.project_table = project_table
         self.role = info[0]["role"]
 
     def read_request(self):
@@ -52,7 +55,15 @@ class Student:
             print("You are not a student.\n")
             return None
         project_name = input("Enter your project title: ")
-        project_dictionary = {"projectID": "2",  # need to random this
+        while True:
+            projectID = random.randrange(1, 10000)  # 4 digit ID
+            for project in self.project_table:
+                if project['projectID'] == projectID:
+                    projectID = random.randrange(1, 10000)
+                    continue
+            break
+        projectID = str(projectID)
+        project_dictionary = {"projectID": projectID,
                               "title": project_name,
                               "lead": None,
                               "member1": None,

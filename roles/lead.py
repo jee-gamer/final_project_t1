@@ -29,7 +29,7 @@ class Lead:
                 choice = input("Enter your choice: ")
                 try:
                     choice = int(choice)
-                except ValueError as e:
+                except TypeError as e:
                     print(e, "// Choice must be integers!")
                 if choice > 5 or choice < 1:
                     print("That choice doesn't exist.")
@@ -104,7 +104,7 @@ class Lead:
         try:
             student_id = int(student_id)
             student_id = str(student_id)
-        except ValueError as e:
+        except TypeError as e:
             print(e, "// student_id must be integers!\n")
             return
         for request in self.request_table:
@@ -151,7 +151,7 @@ class Lead:
             try:
                 faculty_id = int(faculty_id)
                 faculty_id = str(faculty_id)
-            except ValueError as e:
+            except TypeError as e:
                 print(e, "// faculty_id must be integers!\n")
                 return
             for request in self.ad_request_table:  # Check if already requested
@@ -233,7 +233,7 @@ class Lead:
             try:
                 chosen_ev = int(chosen_ev)
                 chosen_ev2 = int(chosen_ev2)
-            except ValueError as e:
+            except TypeError as e:
                 print(e, "// evaluator_id must be integers!")
                 continue
             if not chosen_ev or not chosen_ev2:

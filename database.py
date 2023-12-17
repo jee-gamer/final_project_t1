@@ -89,7 +89,7 @@ class Table:
     def clear(self):  # use with caution
         self.table = []
 
-    def remove_dict(self, dictionary):  # did not test yet
+    def remove_dict(self, dictionary):
         for row in self.table:
             if row == dictionary:
                 self.table.remove(row)
