@@ -20,6 +20,11 @@ There are 2 faculty/advisor needed for evaluation.
 A faculty/advisor can read multiple request at once but can only accept one at a time. <br />
 Also can only evaluate one project at a time (as in one per action)
 
+for project to pass. It needs atleast 1 score out of 10 for both evaluator <br />
+(yes it's really bad score, but atleast you pass right?) <br />
+evaluator can only give score of 1-10 or <br /> 
+-1 if reject the project
+
 ---
 List of files description: <br />
 There are 4 role files <br />
@@ -56,7 +61,8 @@ most function in the class is just an action that can be done by that role.
 Most bugs is taken care of. <br />
 I tested most scenarios but not all. <br />
 so any bugs that is found is a new bug I haven't discovered before. <br />
-There is no missing feature.
+There is no missing feature. <br />
+Keep in mind that when the lead send project proposal, report, evaluation, it checks for the project status such as "ready for report" when trying to send report.
 
 The table of each role and action:
 (be mindful that not every action is done by just one function in the table, most has to return value back to the project_manage.py and let it access and modify the database.)

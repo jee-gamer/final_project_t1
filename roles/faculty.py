@@ -117,7 +117,7 @@ class Faculty:
                 accept = input("Enter the score: ")
                 try:
                     accept = int(accept)
-                except Exception as e:
+                except TypeError as e:
                     print("The score can only be integers!")
                     continue
                 if accept < -1:
@@ -125,6 +125,9 @@ class Faculty:
                     continue
                 if accept > 10:
                     print("Cannot give score higher than 10.")
+                    continue
+                if accept == 0:
+                    print("You cannot give score 0.")
                     continue
                 break
             if number == 1:
