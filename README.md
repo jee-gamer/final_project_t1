@@ -67,31 +67,31 @@ Keep in mind that when the lead send project proposal, report, evaluation, it ch
 The table of each role and action:
 (be mindful that not every action is done by just one function in the table, most has to return value back to the project_manage.py and let it access and modify the database.)
 
-|  Role   |                    Action                     |           Method           |      Class      | Completion percentage |
-|:-------:|:---------------------------------------------:|:--------------------------:|:---------------:|:---------------------:|
-|  Admin  |    Update table (choose row choose column)    | choose_table, update_table |      Table      |         100%          |
-|  Admin  |                  Clear table                  | choose_table, clear_table  |      Table      |         100%          |
-|  Admin  |               Insert data (row)               |  choose_table, insert_row  |      Table      |         100%          |
-|  Admin  |                  Delete row                   |  choose_table, delete_row  |      Table      |         100%          |
-| Student |                Check requests                 |        read_request        |     Student     |         100%          |
-| Student |                Create project                 |       create_project       |     Student     |         100%          |
-| Member  |             Check project status              |    check_project_status    |     Member      |         100%          |
-| Member  |              View project (info)              |        view_project        |     Member      |         100%          |
-| Member  |            Check request responses            |      check_responses       |     Member      |         100%          |
-|  Lead   |             Check project status              |    check_project_status    |      Lead       |         100%          |
-|  Lead   |  Modify project (change name, kick members)   |       modify_project       |      Lead       |         100%          |
-|  Lead   |            Check request responses            |      check_responses       |      Lead       |         100%          |
-|  Lead   |               Request a member                |        send_request        |     Student     |         100%          |
-|  Lead   |              Request an advisor               |    send_request_advisor    | Faculty/Advisor |         100%          |
-|  Lead   |             Send project proposal             |       send_proposal        |     Advisor     |         100%          |
-|  Lead   |              Send project report              |        send_report         |     Advisor     |         100%          |
-|  Lead   |        Request for project evaluation         | request_project_evaluation | Faculty/Advisor |         100%          |
-| Faculty |        Check requests (to be advisor)         |        read_request        |      Lead       |         100%          |
-| Faculty |            Check evaluate requests            |   read_evaluate_request    |      Lead       |         100%          |
-| Faculty |          Evaluated assigned projects          |      evaluate_project      |      Lead       |         100%          |
-| Advisor |            Check proposal requests            |       read_proposal        |      Lead       |         100%          |
-| Advisor |             Check report requests             |        read_report         |      Lead       |         100%          |
-| Advisor | Go to faculty menu (log in as faculty 1 time) |            None            |     Faculty     |         100%          |
+|  Role   |                    Action                     |           Method           |  Class  | Completion percentage |
+|:-------:|:---------------------------------------------:|:--------------------------:|:-------:|:---------------------:|
+|  Admin  |    Update table (choose row choose column)    | choose_table, update_table |  Admin  |         100%          |
+|  Admin  |                  Clear table                  | choose_table, clear_table  |  Admin  |         100%          |
+|  Admin  |               Insert data (row)               |  choose_table, insert_row  |  Admin  |         100%          |
+|  Admin  |                  Delete row                   |  choose_table, delete_row  |  Admin  |         100%          |
+| Student |                Check requests                 |        read_request        | Student |         100%          |
+| Student |                Create project                 |       create_project       | Student |         100%          |
+| Member  |             Check project status              |    check_project_status    | Member  |         100%          |
+| Member  |              View project (info)              |        view_project        | Member  |         100%          |
+| Member  |            Check request responses            |      check_responses       | Member  |         100%          |
+|  Lead   |             Check project status              |    check_project_status    |  Lead   |         100%          |
+|  Lead   |  Modify project (change name, kick members)   |       modify_project       |  Lead   |         100%          |
+|  Lead   |            Check request responses            |      check_responses       |  Lead   |         100%          |
+|  Lead   |               Request a member                |        send_request        |  Lead   |         100%          |
+|  Lead   |              Request an advisor               |    send_request_advisor    |  Lead   |         100%          |
+|  Lead   |             Send project proposal             |       send_proposal        |  Lead   |         100%          |
+|  Lead   |              Send project report              |        send_report         |  Lead   |         100%          |
+|  Lead   |        Request for project evaluation         | request_project_evaluation |  Lead   |         100%          |
+| Faculty |        Check requests (to be advisor)         |        read_request        | Faculty |         100%          |
+| Faculty |            Check evaluate requests            |   read_evaluate_request    | Faculty |         100%          |
+| Faculty |          Evaluated assigned projects          |      evaluate_project      | Faculty |         100%          |
+| Advisor |            Check proposal requests            |       read_proposal        | Advisor |         100%          |
+| Advisor |             Check report requests             |        read_report         | Advisor |         100%          |
+| Advisor | Go to faculty menu (log in as faculty 1 time) |            None            | Advisor |         100%          |
 
 
 
